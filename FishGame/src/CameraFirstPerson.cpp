@@ -116,40 +116,21 @@ void CameraFirstPerson::onMouseUp(const SDL_MouseButtonEvent& e)
 
 void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
 {
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
-
-    //if (this->getParentWorldObject() != NULL && this->isLockedWRTparent())
-    //{
-    //    if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
-    //    {
-    //        //check for CRTL key
-    //        const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    //        if (keystate[SDL_SCANCODE_LCTRL])
-    //        {
-    //            int dy = this->mouseHandler->getMouseMotionDeltaY();
-    //            float radianDeltaPhi = ((float)dy) * this->jointMouseMotionSensitivity;
-    //            this->changeJointPhi(radianDeltaPhi);
-    //        }
-    //        else
-    //        {
-    //            int dx = this->mouseHandler->getMouseMotionDeltaX();
-    //            float radianDeltaTheta = ((float)dx) * this->jointMouseMotionSensitivity;
-    //            this->changeJointTheta(radianDeltaTheta);
-
-    //            int dy = this->mouseHandler->getMouseMotionDeltaY();
-    //            this->setDistFromJointToCam(this->getDistFromJointToCam() + ((float)dy / 100.0f));
-    //        }
-    //    }
-    //}
-
-
     // Update the current position
     SDL_GetRelativeMouseState(&rel_x, &rel_y);
 
-    // Calculate the relative movement
-
-    std::cout << "X: " << rel_x;
-    std::cout << "Y: " << rel_y;
+    // Checks to see if the camera is looking straight up or down (1 = up, -1 = down)
+    float angle = this->getLookDirection().dotProduct(Vector(0, 0, 1));
+    
+    // if rel_y is negative that means the camera is trying to look up
+    if (angle >= 0.979f && rel_y < 0)
+    {
+        rel_y = 0;
+    }
+    else if(angle <= -0.979f && rel_y > 0)
+    {
+        rel_y = 0;
+    }
 
     this->changeLookAtViaMouse(rel_x, rel_y);
 }
