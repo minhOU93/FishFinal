@@ -35,6 +35,7 @@
 #include "AftrGLRendererBase.h"
 
 using namespace Aftr;
+using namespace physx;
 
 GLViewFishGame* GLViewFishGame::New( const std::vector< std::string >& args )
 {
@@ -92,6 +93,31 @@ void GLViewFishGame::updateWorld()
    GLView::updateWorld(); //Just call the parent's update world first.
                           //If you want to add additional functionality, do it after
                           //this call.
+
+   scene->simulate(1.0 / 60.0);
+   {
+       physx::PxU32 errorState = 0;
+       scene->fetchResults(true);
+
+       {
+           physx::PxU32 numActors = 0;
+           physx::PxActor** actors = scene->getActiveActors(numActors);
+           //std::cout << "NUMBER OF ACTORS: " << scene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC)<< std::endl;
+           // std::cout << "NUMBER OF ACTIVE ACTORS: " << numActors << std::endl;
+           //std::cout << "NUMBER OF LINKS: " << articulation->getNbLinks() << std::endl;
+           //make sure you set physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS, true in your scene!
+           //poses that have changed since the last update (scene->setFlag)
+           for (physx::PxU32 i = 0; i < numActors; ++i)
+           {
+               physx::PxActor* actor = actors[i];
+
+               WOPhysX* wo = static_cast<WOPhysX*>(actor->userData);
+
+               wo->updatePoseFromPhysicsEngine();
+           }
+
+       }
+   }
 }
 
 
@@ -162,12 +188,104 @@ void Aftr::GLViewFishGame::loadMap()
 
    this->cam->setPosition( 15,15,10 );
 
-   //this->cam =
+
+   {
+       this->foundation = PxCreateFoundation(PX_PHYSICS_VERSION, a, e);
+       this->physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, physx::PxTolerancesScale());
+
+
+       physx::PxSceneDesc sc(physics->getTolerancesScale());
+       sc.filterShader = physx::PxDefaultSimulationFilterShader;
+       sc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
+
+       this->scene = physics->createScene(sc);
+
+       this->scene->setFlag(physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS, true);
+   }
+
+   scene->setGravity(physx::PxVec3(0, 0, -27.1f));
+
+   PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
+   PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0, 0, 1, 0), *gMaterial);//good for the grass
+   scene->addActor(*groundPlane);
 
    std::string shinyRedPlasticCube( ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl" );
    std::string wheeledCar( ManagerEnvironmentConfiguration::getSMM() + "/models/rcx_treads.wrl" );
    std::string grass( ManagerEnvironmentConfiguration::getSMM() + "/models/grassFloor400x400_pp.wrl" );
    std::string human( ManagerEnvironmentConfiguration::getSMM() + "/models/human_chest.wrl" );
+
+   std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole.fbx");
+   std::string reel(ManagerEnvironmentConfiguration::getLMM() + "models/reel.fbx");
+   std::string line(ManagerEnvironmentConfiguration::getLMM() + "models/line.fbx");
+   std::string bait(ManagerEnvironmentConfiguration::getLMM() + "models/bait.fbx");
+
+
+   std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
+   std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
+
+   WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "circle");
+   box2->setPosition(Vector(0, 0, 50));
+   worldLst->push_back(box2);
+
+   {
+       //pole
+       WO* wo = WO::New(pole, Vector(0.1, 0.1, 0.1));
+       wo->upon_async_model_loaded([wo, skin]()
+           {
+               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+               wo->getModel()->getSkins().push_back(std::move(spidey));
+               wo->getModel()->useNextSkin();
+           });
+       wo->setPosition(0, 0, 20);
+       worldLst->push_back(wo);
+   }
+
+   {
+       //bait
+       WO* wo = WO::New(bait, Vector(0.1, 0.1, 0.1));
+       wo->upon_async_model_loaded([wo, skin]()
+           {
+               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+               wo->getModel()->getSkins().push_back(std::move(spidey));
+               wo->getModel()->useNextSkin();
+           });
+       wo->setPosition(0, 0, 20);
+       worldLst->push_back(wo);
+   }
+
+   {
+       //line
+       WO* wo = WO::New(line, Vector(0.1, 0.1, 0.1));
+       wo->upon_async_model_loaded([wo, skin]()
+           {
+               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+               wo->getModel()->getSkins().push_back(std::move(spidey));
+               wo->getModel()->useNextSkin();
+           });
+       wo->setPosition(0, 0, 20);
+       worldLst->push_back(wo);
+   }
+
+   {
+       //reel
+       WO* wo = WO::New(reel, Vector(0.1, 0.1, 0.1));
+       wo->upon_async_model_loaded([wo, skin]()
+           {
+               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+               wo->getModel()->getSkins().push_back(std::move(spidey));
+               wo->getModel()->useNextSkin();
+           });
+       wo->setPosition(0, 0, 20);
+       worldLst->push_back(wo);
+   }
    
    //SkyBox Textures readily available
    std::vector< std::string > skyBoxImageNames; //vector to store texture paths
@@ -236,6 +354,7 @@ void Aftr::GLViewFishGame::loadMap()
          } );
       wo->setLabel( "Grass" );
       //wo->isLockedWRTparent()
+      //wo->getChildren()
       worldLst->push_back( wo );
    }
 

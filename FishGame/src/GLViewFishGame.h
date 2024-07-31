@@ -2,6 +2,10 @@
 
 #include "GLView.h"
 #include "CameraFirstPerson.h"
+#include "PxPhysicsAPI.h"
+#include "WOPxLink.h"
+#include "WOPhysX.h"
+#include "WOPxObj.h"
 
 namespace Aftr
 {
@@ -36,7 +40,10 @@ public:
 
 protected:
    GLViewFishGame( const std::vector< std::string >& args );
-   virtual void onCreate();   
+   virtual void onCreate(); 
+
+   physx::PxDefaultAllocator a;
+   physx::PxDefaultErrorCallback e;
 };
 
 /** \} */
