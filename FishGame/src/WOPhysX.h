@@ -33,6 +33,7 @@ class WOPhysX : public virtual Aftr::WO
 
 			if (a != nullptr) m = a->getGlobalPose();
 			else if (b != nullptr) m = b->getGlobalPose();
+			
 
 			Aftr::Mat4 m2;
 			

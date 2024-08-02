@@ -6,6 +6,7 @@
 #include "WOPxLink.h"
 #include "WOPhysX.h"
 #include "WOPxObj.h"
+#include "WOPxStatic.h"
 
 namespace Aftr
 {
@@ -38,12 +39,38 @@ public:
    virtual void onKeyDown( const SDL_KeyboardEvent& key );
    virtual void onKeyUp( const SDL_KeyboardEvent& key );
 
+   const Uint8* keystates = SDL_GetKeyboardState(NULL);
+
+   WO* vendor = nullptr;
+
+   WOPxObj* holder = nullptr;
+   WOPxLink* test = nullptr;
+
+   WOPxStatic* anchor = nullptr;
+   physx::PxReal mass = 0;
+
+   physx::PxD6Joint* joint = nullptr;
+   physx::PxSphericalJoint* Stringjoint = nullptr;
+
+   std::vector<WOPxObj*> sticks;
+   std::vector<WOPxObj*> strings;
+
+   Vector rayOutput;
+
+   AftrGeometricTerm occulude;
+
+   WO* blocker = nullptr;
+
+   //physx::PxFixedJoint* joint = nullptr;
+
 protected:
    GLViewFishGame( const std::vector< std::string >& args );
    virtual void onCreate(); 
 
    physx::PxDefaultAllocator a;
    physx::PxDefaultErrorCallback e;
+   physx::PxArticulationReducedCoordinate* articulation;
+
 };
 
 /** \} */

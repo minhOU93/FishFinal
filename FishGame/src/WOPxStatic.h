@@ -5,7 +5,7 @@
 class WOPxStatic : public WOPhysX
 {
 public:
-	static WOPxStatic* New(const std::string& path, const Aftr::Vector& scale, const Aftr::Vector& pos, Aftr::MESH_SHADING_TYPE mst, physx::PxPhysics* p, physx::PxScene* s)
+	static WOPxStatic* New(const std::string& path, const Aftr::Vector& pos, const Aftr::Vector& scale, Aftr::MESH_SHADING_TYPE mst, physx::PxPhysics* p, physx::PxScene* s)
 	{
 		WOPxStatic* wo = new WOPxStatic();
 

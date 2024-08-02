@@ -35,9 +35,8 @@ public:
 		a->setMass(value);
 	}
 
-	physx::PxTransform getTransform() const
+	physx::PxTransform getTransform(Aftr::Mat4 pose) const
 	{
-		Aftr::Mat4 pose = this->getPose();
 		physx::PxMat44 m;
 
 		for (int i = 0; i < 16; i++) m(i % 4, i / 4) = pose[i];

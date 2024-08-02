@@ -31,6 +31,8 @@ namespace Aftr
 		float wheelButtonVelocityScalar;
 		int wheelScrollCounter;
 
+		const Uint8* keystates = SDL_GetKeyboardState(NULL);
+
 		int rel_x;
 		int rel_y;
 	};

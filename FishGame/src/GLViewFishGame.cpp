@@ -4,6 +4,7 @@
 #include "ManagerOpenGLState.h" //We can change OpenGL State attributes with this
 #include "Axes.h" //We can set Axes to on/off with this
 #include "PhysicsEngineODE.h"
+#include "AftrUtilities.h"
 
 //Different WO used by this module
 #include "WO.h"
@@ -76,7 +77,18 @@ void GLViewFishGame::onCreate()
       this->pe->setGravityNormalizedVector( Vector( 0,0,-1.0f ) );
       this->pe->setGravityScalar( Aftr::GRAVITY );
    }
-   this->setActorChaseType( STANDARDEZNAV ); //Default is STANDARDEZNAV mode
+
+   Vector camLookDir = this->cam->getLookDirection();
+   Vector camNormalDir = this->cam->getNormalDirection();
+   Vector camPos = this->cam->getPosition();
+
+   this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
+
+   this->cam->setPosition(camPos);
+   this->cam->setCameraNormalDirection(camNormalDir);
+   this->cam->setCameraLookDirection(camLookDir);
+   this->cam->startCameraBehavior();
+   this->cam->setLabel("Camera"); //Default is STANDARDEZNAV mode
    //this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
    //this->setNumPhysicsStepsPerRender( 0 ); //pause physics engine on start up; will remain paused till set to 1
 }
@@ -103,7 +115,7 @@ void GLViewFishGame::updateWorld()
            physx::PxU32 numActors = 0;
            physx::PxActor** actors = scene->getActiveActors(numActors);
            //std::cout << "NUMBER OF ACTORS: " << scene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC)<< std::endl;
-           // std::cout << "NUMBER OF ACTIVE ACTORS: " << numActors << std::endl;
+           //std::cout << "NUMBER OF ACTIVE ACTORS: " << numActors << std::endl;
            //std::cout << "NUMBER OF LINKS: " << articulation->getNbLinks() << std::endl;
            //make sure you set physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS, true in your scene!
            //poses that have changed since the last update (scene->setFlag)
@@ -116,6 +128,19 @@ void GLViewFishGame::updateWorld()
                wo->updatePoseFromPhysicsEngine();
            }
 
+           //PxArticulationReducedCoordinate* test;
+           //scene->getArticulations(&test, 1);
+           //PxArticulationLink* links[3];
+           //test->getLinks(links, 1, 0);
+
+           //for (physx::PxU32 i = 0; i < test->getNbLinks(); ++i)
+           //{
+           //    physx::PxArticulationLink* actor = links[0];
+
+           //    WOPxLink* wo = static_cast<WOPxLink*>(actor->userData);
+
+           //    wo->updatePoseFromPhysicsEngine();
+           //}
        }
    }
 }
@@ -153,18 +178,70 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
    if( key.keysym.sym == SDLK_1 )
    {
-       Vector camLookDir = this->cam->getLookDirection();
-       Vector camNormalDir = this->cam->getNormalDirection();
-       Vector camPos = this->cam->getPosition();
+       occulude = blocker->getNearestPointWhereLineIntersectsMe(vendor->getPosition(), this->cam->getPosition(), rayOutput);
 
-       this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
-
-       this->cam->setPosition(camPos);
-       this->cam->setCameraNormalDirection(camNormalDir);
-       this->cam->setCameraLookDirection(camLookDir);
-       this->cam->startCameraBehavior();
-       this->cam->setLabel("Camera");
+       std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
+       if (occulude == AftrGeometricTerm::geoSUCCESS)
+       {
+           std::cout << "POINT FOUND" << std::endl;
+       }
+       else
+       {
+           std::cout << "NO POINT FOUND" << std::endl;
+       }
    }
+   if (key.keysym.sym == SDLK_2)
+   {
+       int offset = sticks[0]->getModel()->getBoundingBox().getlxlylz().x;
+       //joint->drive
+
+       joint = PxD6JointCreate(*physics, anchor->b, PxTransform(PxVec3(offset - 0.9, 0, 0)), sticks[0]->a, PxTransform(PxVec3(-offset + 0.9, 0, 0)));
+       //joint->setMotion(PxD6Axis::eY, PxD6Motion::eFREE);
+       //joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
+
+       for (int i = 0; i < sticks.size() - 1; i++)
+       {
+           std::cout << offset << std::endl;
+           joint = PxD6JointCreate(*physics, sticks[i]->a, PxTransform(PxVec3(offset - 0.9, 0, 0)), sticks[i + 1]->a, PxTransform(PxVec3(-offset + 0.9, 0, 0)));
+           //sticks[i]->a->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
+           //joint->setDrive(PxD6Drive::eX, PxD6JointDrive(1000, 100, FLT_MAX, true));
+           //joint->setDrive(PxD6Drive::eY, PxD6JointDrive(1000, 100, FLT_MAX, true));
+           //joint->setDrive(PxD6Drive::eZ, PxD6JointDrive(1000, 100, FLT_MAX, true));
+           //joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
+       }
+       joint = PxD6JointCreate(*physics, sticks[9]->a, PxTransform(PxVec3(0, 0, -2)), strings[0]->a, PxTransform(PxVec3(0, 0, 2)));
+
+       //physx::PxFixedJoint* joint = nullptr;
+
+       //joint = PxFixedJointCreate(*physics, anchor->b, PxTransform(PxVec3(offset - 1, 0, 0)), sticks[0]->a, PxTransform(PxVec3(-offset + 1, 0, 0)));
+       //joint->setBreakForce(1000, 100000);
+       //joint->setConstraintFlag(PxConstraintFlag::eDRIVE_LIMITS_ARE_FORCES, true);
+       //joint->setConstraintFlag(PxConstraintFlag::eDISABLE_PREPROCESSING, true);
+
+       //for (int i = 0; i < sticks.size() - 1; i++)
+       //{
+       //    std::cout << offset << std::endl;
+       //    sticks[i]->a->setMass(0.1f);
+       //    joint = PxFixedJointCreate(*physics, sticks[i]->a, PxTransform(PxVec3(offset - 1, 0, 0)), sticks[i + 1]->a, PxTransform(PxVec3(-offset + 1, 0, 0)));
+       //    joint->setBreakForce(10000000, 100000);
+       //    joint->setConstraintFlag(PxConstraintFlag::eDRIVE_LIMITS_ARE_FORCES, true);
+       //    joint->setConstraintFlag(PxConstraintFlag::eDISABLE_PREPROCESSING, true);
+       //}
+   }
+   if (key.keysym.sym == SDLK_3)
+   {
+       joint->setDrive(PxD6Drive::eY, PxD6JointDrive(0, 1000, FLT_MAX, true));
+       joint->setDriveVelocity(PxVec3(0.0f, -50.0f, 0.0f), PxVec3(0.0f), true);
+   }
+   if (key.keysym.sym == SDLK_SPACE)
+   {
+       std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+
+       mass += 1;
+       strings[0]->a->addForce(PxVec3(0, 0, -500));
+   }
+
+
 }
 
 
@@ -203,7 +280,8 @@ void Aftr::GLViewFishGame::loadMap()
        this->scene->setFlag(physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS, true);
    }
 
-   scene->setGravity(physx::PxVec3(0, 0, -27.1f));
+   //scene->setGravity(physx::PxVec3(0, 0, -9.81f));
+   articulation = physics->createArticulationReducedCoordinate();
 
    PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
    PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0, 0, 1, 0), *gMaterial);//good for the grass
@@ -223,70 +301,101 @@ void Aftr::GLViewFishGame::loadMap()
    std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
    std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
 
-   WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "circle");
-   box2->setPosition(Vector(0, 0, 50));
-   worldLst->push_back(box2);
+   //WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "circle");
+   //box2->setPosition(Vector(0, 0, 50));
+   //worldLst->push_back(box2);
 
-   {
-       //pole
-       WO* wo = WO::New(pole, Vector(0.1, 0.1, 0.1));
-       wo->upon_async_model_loaded([wo, skin]()
-           {
-               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-               wo->getModel()->getSkins().push_back(std::move(spidey));
-               wo->getModel()->useNextSkin();
-           });
-       wo->setPosition(0, 0, 20);
-       worldLst->push_back(wo);
-   }
+   vendor = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
+   vendor->setPosition(0, 0, 10);
+   worldLst->push_back(vendor);
 
-   {
-       //bait
-       WO* wo = WO::New(bait, Vector(0.1, 0.1, 0.1));
-       wo->upon_async_model_loaded([wo, skin]()
-           {
-               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-               wo->getModel()->getSkins().push_back(std::move(spidey));
-               wo->getModel()->useNextSkin();
-           });
-       wo->setPosition(0, 0, 20);
-       worldLst->push_back(wo);
-   }
+   blocker = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
+   blocker->setPosition(0, 8, 10);
+   blocker->isVisible = false;
+   //wo->isVisible = false;
+   worldLst->push_back(blocker);
 
-   {
-       //line
-       WO* wo = WO::New(line, Vector(0.1, 0.1, 0.1));
-       wo->upon_async_model_loaded([wo, skin]()
-           {
-               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-               wo->getModel()->getSkins().push_back(std::move(spidey));
-               wo->getModel()->useNextSkin();
-           });
-       wo->setPosition(0, 0, 20);
-       worldLst->push_back(wo);
-   }
 
+   anchor = WOPxStatic::New(shinyRedPlasticCube, Vector(0, 0, 50), Vector(1, 0.5, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
+   worldLst->push_back(anchor);
+
+   sticks.resize(10);
+   strings.resize(10);
+   int offset = 4;
+   for (int i = 0; i < sticks.size(); i++)
    {
-       //reel
-       WO* wo = WO::New(reel, Vector(0.1, 0.1, 0.1));
-       wo->upon_async_model_loaded([wo, skin]()
-           {
-               ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-               wo->getModel()->getSkins().push_back(std::move(spidey));
-               wo->getModel()->useNextSkin();
-           });
-       wo->setPosition(0, 0, 20);
-       worldLst->push_back(wo);
+       sticks[i] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(1, 0.5, 0.5));
+       sticks[i]->setPosition(Vector(offset, 0, 50));
+       worldLst->push_back(sticks[i]);
+       offset += 4;
    }
    
+   strings[0] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(0.5, 0.5, 1.5));
+   strings[0]->setPosition(Vector(offset - 4, 0, 45));
+   worldLst->push_back(strings[0]);
+   holder = strings[0];
+
+
+   //{
+   //    //pole
+   //    WO* wo = WO::New(pole, Vector(0.1, 0.1, 0.1));
+   //    wo->upon_async_model_loaded([wo, skin]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 0, 20);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    //bait
+   //    WO* wo = WO::New(bait, Vector(0.1, 0.1, 0.1));
+   //    wo->upon_async_model_loaded([wo, skin]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 0, 20);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    //line
+   //    WO* wo = WO::New(line, Vector(0.1, 0.1, 0.1));
+   //    wo->upon_async_model_loaded([wo, skin]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 0, 20);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    //reel
+   //    WO* wo = WO::New(reel, Vector(0.1, 0.1, 0.1));
+   //    wo->upon_async_model_loaded([wo, skin]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 0, 20);
+   //    worldLst->push_back(wo);
+   //}
+   //
    //SkyBox Textures readily available
    std::vector< std::string > skyBoxImageNames; //vector to store texture paths
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_water+6.jpg" );

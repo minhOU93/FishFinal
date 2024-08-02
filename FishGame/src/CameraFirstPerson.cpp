@@ -26,14 +26,26 @@ void CameraFirstPerson::update()
 {
     // CameraStandard::update();
 
-    //if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownRightButton())
-    //{
-    //    const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    //    if (keystate[SDL_SCANCODE_LSHIFT])
-    //        Camera::moveOppositeLookDirection(this->getCameraVelocity() * this->wheelButtonVelocityScalar);
-    //    else
-    //        Camera::moveInLookDirection(this->getCameraVelocity() * this->wheelButtonVelocityScalar);
-    //}
+    if (keystates[SDL_SCANCODE_W])
+    {
+        Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
+        this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * this->wheelButtonVelocityScalar));
+    }
+    if (keystates[SDL_SCANCODE_A])
+    {
+        this->moveLeft();
+
+    }
+    if (keystates[SDL_SCANCODE_S])
+    {
+        Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
+        this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * -1.0 * this->wheelButtonVelocityScalar));
+
+    }
+    if (keystates[SDL_SCANCODE_D])
+    {
+        this->moveRight();
+    }
 }
 
 void CameraFirstPerson::onMouseDown(const SDL_MouseButtonEvent& e)
@@ -51,41 +63,41 @@ void CameraFirstPerson::onMouseDown(const SDL_MouseButtonEvent& e)
 
 void Aftr::CameraFirstPerson::onMouseWheelScroll(const SDL_MouseWheelEvent& e)
 {
-    Camera::onMouseWheelScroll(e);
+    //Camera::onMouseWheelScroll(e);
 
-    const Uint8* keystate = SDL_GetKeyboardState(NULL);
-    if (keystate[SDL_SCANCODE_LCTRL])
-    { // LCTRL IS held down, increment the velocity exponent by +/- 10
-        int scaleFactor = 10;
+    //const Uint8* keystate = SDL_GetKeyboardState(NULL);
+    //if (keystate[SDL_SCANCODE_LCTRL])
+    //{ // LCTRL IS held down, increment the velocity exponent by +/- 10
+    //    int scaleFactor = 10;
 
-        if (keystate[SDL_SCANCODE_LALT])
-            scaleFactor = 100; // If LCTRL and LALT are held, increase exponent by 100
+    //    if (keystate[SDL_SCANCODE_LALT])
+    //        scaleFactor = 100; // If LCTRL and LALT are held, increase exponent by 100
 
-        if (e.y > 0)
-            this->wheelScrollCounter += scaleFactor;
-        else if (e.y < 0)
-            this->wheelScrollCounter -= scaleFactor;
-    }
-    else
-    { // LCTRL is NOT held down, increment the velocity exponent by +/- 1
-        if (e.y > 0)
-            ++this->wheelScrollCounter;
-        else if (e.y < 0)
-            --this->wheelScrollCounter;
-    }
+    //    if (e.y > 0)
+    //        this->wheelScrollCounter += scaleFactor;
+    //    else if (e.y < 0)
+    //        this->wheelScrollCounter -= scaleFactor;
+    //}
+    //else
+    //{ // LCTRL is NOT held down, increment the velocity exponent by +/- 1
+    //    if (e.y > 0)
+    //        ++this->wheelScrollCounter;
+    //    else if (e.y < 0)
+    //        --this->wheelScrollCounter;
+    //}
 
-    //update the camera velocity scalar
-    if (this->wheelScrollCounter >= 0)
-        this->wheelButtonVelocityScalar = (float)this->wheelScrollCounter;
-    else
-        this->wheelButtonVelocityScalar = -1.0f / (float)this->wheelScrollCounter;
+    ////update the camera velocity scalar
+    //if (this->wheelScrollCounter >= 0)
+    //    this->wheelButtonVelocityScalar = (float)this->wheelScrollCounter;
+    //else
+    //    this->wheelButtonVelocityScalar = -1.0f / (float)this->wheelScrollCounter;
 
-    if (std::abs(this->wheelButtonVelocityScalar) <= std::numeric_limits< float >::min())
-        this->wheelButtonVelocityScalar = 1.0f;
+    //if (std::abs(this->wheelButtonVelocityScalar) <= std::numeric_limits< float >::min())
+    //    this->wheelButtonVelocityScalar = 1.0f;
 
-    std::cout << "Cam velocity multiplier " << this->wheelButtonVelocityScalar
-        << ", wheelScroll count " << this->wheelScrollCounter
-        << ", velocity (m/frame) " << this->cameraVelocity * this->wheelButtonVelocityScalar << "\n";
+    //std::cout << "Cam velocity multiplier " << this->wheelButtonVelocityScalar
+    //    << ", wheelScroll count " << this->wheelScrollCounter
+    //    << ", velocity (m/frame) " << this->cameraVelocity * this->wheelButtonVelocityScalar << "\n";
 }
 
 void CameraFirstPerson::moveInLookDirection()
