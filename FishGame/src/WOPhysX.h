@@ -9,7 +9,7 @@ class WOPhysX : public virtual Aftr::WO
 {
 	public:
 
-		physx::PxRigidBody* a = nullptr;
+		physx::PxRigidDynamic* a = nullptr;
 		physx::PxRigidStatic* b = nullptr;
 
 		void onCreate(const std::string& path, const Aftr::Vector& scale, const Aftr::Vector& pos, Aftr::MESH_SHADING_TYPE mst, physx::PxPhysics* p)

@@ -7,6 +7,8 @@
 #include "WOPhysX.h"
 #include "WOPxObj.h"
 #include "WOPxStatic.h"
+#include "WOString.h"
+#include "GuiText.h"
 
 namespace Aftr
 {
@@ -60,6 +62,13 @@ public:
    AftrGeometricTerm occulude;
 
    WO* blocker = nullptr;
+
+   WOString* pressF = nullptr;
+   float object_xyz[3] = { 0, 0, 0 };
+   float global_xyz[3] = { 0, 0, 0 };
+
+   float global_xyz_prev[3] = { 0, 0, 0 };
+   float object_xyz_prev[3] = { 0, 0, 0 };
 
    //physx::PxFixedJoint* joint = nullptr;
 

@@ -78,19 +78,19 @@ void GLViewFishGame::onCreate()
       this->pe->setGravityScalar( Aftr::GRAVITY );
    }
 
-   Vector camLookDir = this->cam->getLookDirection();
-   Vector camNormalDir = this->cam->getNormalDirection();
-   Vector camPos = this->cam->getPosition();
+   //Vector camLookDir = this->cam->getLookDirection();
+   //Vector camNormalDir = this->cam->getNormalDirection();
+   //Vector camPos = this->cam->getPosition();
 
-   this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
-
-   this->cam->setPosition(camPos);
-   this->cam->setCameraNormalDirection(camNormalDir);
-   this->cam->setCameraLookDirection(camLookDir);
-   this->cam->startCameraBehavior();
-   this->cam->setLabel("Camera"); //Default is STANDARDEZNAV mode
    //this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
-   //this->setNumPhysicsStepsPerRender( 0 ); //pause physics engine on start up; will remain paused till set to 1
+
+   //this->cam->setPosition(camPos);
+   //this->cam->setCameraNormalDirection(camNormalDir);
+   //this->cam->setCameraLookDirection(camLookDir);
+   //this->cam->startCameraBehavior();
+   //this->cam->setLabel("Camera"); 
+
+   this->setActorChaseType(STANDARDEZNAV);
 }
 
 
@@ -300,6 +300,12 @@ void Aftr::GLViewFishGame::loadMap()
 
    std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
    std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
+   std::string fontArial(ManagerEnvironmentConfiguration::getSMM() + "/fonts/arial.ttf");
+
+   //pressF = WOString::New("Press F to Shop", fontArial, 240, 10);
+   //worldLst->push_back(pressF);
+
+   //pressF->setPosition(0, 5, 5);
 
    //WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "circle");
    //box2->setPosition(Vector(0, 0, 50));
@@ -309,12 +315,10 @@ void Aftr::GLViewFishGame::loadMap()
    vendor->setPosition(0, 0, 10);
    worldLst->push_back(vendor);
 
-   blocker = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
-   blocker->setPosition(0, 8, 10);
-   blocker->isVisible = false;
-   //wo->isVisible = false;
-   worldLst->push_back(blocker);
-
+   //blocker = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
+   //blocker->setPosition(0, 8, 10);
+   ////blocker->isVisible = false;
+   //worldLst->push_back(blocker);
 
    anchor = WOPxStatic::New(shinyRedPlasticCube, Vector(0, 0, 50), Vector(1, 0.5, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
    worldLst->push_back(anchor);
@@ -553,19 +557,51 @@ void Aftr::GLViewFishGame::loadMap()
    //   this->setActor( wo );
    //   netLst->push_back( wo );
    //}
-   
+
+
    //Make a Dear Im Gui instance via the WOImGui in the engine... This calls
    //the default Dear ImGui demo that shows all the features... To create your own,
-   //inherit from WOImGui and override WOImGui::drawImGui_for_this_frame(...) (among any others you need).
-   WOImGui* gui = WOImGui::New( nullptr );
-   gui->setLabel( "My Gui" );
-   gui->subscribe_drawImGuiWidget(
-      [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
-      {
 
-      } );
-   this->worldLst->push_back( gui );
+   GuiText* yo = GuiText::New(nullptr);
+   //gui->setLabel( "My Gui" );
+   //gui->subscribe_drawImGuiWidget(
+   //   [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
+   //   {
+   //        //WOImGui::draw_AftrImGui_Demo(gui);
+   //        //yo->drawImGui_for_this_frame();
+   //        //if (ImGui::SliderAngle("Rel X Axis", &object_xyz[0], -180, 180)) {
+   //        //    pressF->getModel()->rotateAboutRelX(object_xyz[0] - object_xyz_prev[0]);
+   //        //    object_xyz_prev[0] = object_xyz[0];
+   //        //}
 
+   //        //if (ImGui::SliderAngle("Rel Y Axis", &object_xyz[1], -180, 180)) {
+   //        //    pressF->getModel()->rotateAboutRelY(object_xyz[1] - object_xyz_prev[1]);
+   //        //    object_xyz_prev[1] = object_xyz[1];
+   //        //}
+
+   //        //if (ImGui::SliderAngle("Rel Z Axis", &object_xyz[2], -180, 180)) {
+   //        //    pressF->getModel()->rotateAboutRelZ(object_xyz[2] - object_xyz_prev[2]);
+   //        //    object_xyz_prev[2] = object_xyz[2];
+   //        //}
+   //    
+
+   //        // if (ImGui::SliderAngle("Global X Axis", &global_xyz[0], -180, 180)) {
+   //        //     pressF->rotateAboutGlobalX(global_xyz[0] - global_xyz_prev[0]);
+   //        //     global_xyz_prev[0] = global_xyz[0];
+   //        // }
+
+   //        // if (ImGui::SliderAngle("Global Y Axis", &global_xyz[1], -180, 180)) {
+   //        //     pressF->rotateAboutGlobalY(global_xyz[1] - global_xyz_prev[1]);
+   //        //     global_xyz_prev[1] = global_xyz[1];
+   //        // }
+
+   //        // if (ImGui::SliderAngle("Global Z Axis", &global_xyz[2], -180, 180)) {
+   //        //     pressF->rotateAboutGlobalZ(global_xyz[2] - global_xyz_prev[2]);
+   //        //     global_xyz_prev[2] = global_xyz[2];
+   //        // }
+   //   } );
+   //this->worldLst->push_back( gui );
+   this->worldLst->push_back(yo);
    createFishGameWayPoints();
 }
 
