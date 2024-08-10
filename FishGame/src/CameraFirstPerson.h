@@ -35,5 +35,7 @@ namespace Aftr
 
 		int rel_x;
 		int rel_y;
+
+		float catch_score;
 	};
 }

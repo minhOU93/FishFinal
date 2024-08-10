@@ -22,7 +22,7 @@ public:
 	{
 		//textBox("HIII!!!!!!!");
 
-		sellMenu();
+		//sellMenu();
 	}
 
 
@@ -66,6 +66,11 @@ public:
 		ImGui::Separator();
 
 		ImGui::End();
+	}
+
+	void fishCatchProgress(float current, float total)
+	{
+
 	}
 
 	void getCenterPosition()

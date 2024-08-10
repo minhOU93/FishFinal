@@ -17,7 +17,7 @@ public:
 		Aftr::Vector bb = this->getModel()->getBoundingBox().getlxlylz() * 0.5; // bb[0], bb[2], bb[1]);
 	    //Aftr::Vector bb(1, 1, 1);
 
-		physx::PxMaterial * gMaterial = p->createMaterial(4.5f, 3.7f, 0.6f);
+		physx::PxMaterial * gMaterial = p->createMaterial(0.5f, 0.5f, 0.6f);
 		physx::PxShape* shape = nullptr;
 
 		if (shape_type == "circle")

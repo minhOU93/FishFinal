@@ -4,6 +4,9 @@
 #include <limits>
 #include "SDL.h"
 
+#include <chrono>
+#include <thread>
+
 
 using namespace Aftr;
 
@@ -15,6 +18,7 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
     this->wheelScrollCounter = 1;
     this->rel_x = 0;
     this->rel_y = 0;
+    this->catch_score = 0.0f;
 }
 
 CameraFirstPerson::~CameraFirstPerson()
@@ -31,34 +35,44 @@ void CameraFirstPerson::update()
         Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
         this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * this->wheelButtonVelocityScalar));
     }
-    if (keystates[SDL_SCANCODE_A])
+    else if (keystates[SDL_SCANCODE_A])
     {
         this->moveLeft();
 
     }
-    if (keystates[SDL_SCANCODE_S])
+    else if (keystates[SDL_SCANCODE_S])
     {
         Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
         this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * -1.0 * this->wheelButtonVelocityScalar));
 
     }
-    if (keystates[SDL_SCANCODE_D])
+    else if (keystates[SDL_SCANCODE_D])
     {
         this->moveRight();
+    }
+
+    if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownRightButton())
+    {
+
+        catch_score += 1.0f;
+
+        std::cout << catch_score << std::endl;
+
     }
 }
 
 void CameraFirstPerson::onMouseDown(const SDL_MouseButtonEvent& e)
 {
-    //CameraStandard::onMouseDown(e);
+    ////CameraStandard::onMouseDown(e);
+    //if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
+    //{
+    //    std::cout << "GO GO GO!!!";
 
-    if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownMiddleButton())
-    {
-        //reset the wheelScrollCounter
-        this->wheelScrollCounter = 1;
-        this->wheelButtonVelocityScalar = 1.0f;
-        std::cout << "Reset Cam velocity multiplier due to middle button click...\n";
-    }
+    //    catch_score += 0.01f;
+
+    //    std::cout << catch_score << std::endl;
+    //}
+
 }
 
 void Aftr::CameraFirstPerson::onMouseWheelScroll(const SDL_MouseWheelEvent& e)
@@ -144,8 +158,8 @@ void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
         rel_y = 0;
     }
 
-    this->changeLookAtViaMouse(rel_x, rel_y);
-}
+    this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
+ }
 
 void CameraFirstPerson::setCameraVelocityMultiplier(float camVelMultiplier)
 {

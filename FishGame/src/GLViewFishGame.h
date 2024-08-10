@@ -9,6 +9,7 @@
 #include "WOPxStatic.h"
 #include "WOString.h"
 #include "GuiText.h"
+#include "CameraFishing.h"
 
 namespace Aftr
 {
@@ -49,6 +50,7 @@ public:
    WOPxLink* test = nullptr;
 
    WOPxStatic* anchor = nullptr;
+   WOPxStatic* anchor2 = nullptr;
    physx::PxReal mass = 0;
 
    physx::PxD6Joint* joint = nullptr;
@@ -70,7 +72,11 @@ public:
    float global_xyz_prev[3] = { 0, 0, 0 };
    float object_xyz_prev[3] = { 0, 0, 0 };
 
+   float pos = 40.0f;
+
    //physx::PxFixedJoint* joint = nullptr;
+
+   CameraFishing* fishtime;
 
 protected:
    GLViewFishGame( const std::vector< std::string >& args );

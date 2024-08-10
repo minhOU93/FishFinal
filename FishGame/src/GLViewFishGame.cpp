@@ -5,6 +5,9 @@
 #include "Axes.h" //We can set Axes to on/off with this
 #include "PhysicsEngineODE.h"
 #include "AftrUtilities.h"
+#include "WOOcean.h"
+#include "Wave.h"
+#include "WOWater.h"
 
 //Different WO used by this module
 #include "WO.h"
@@ -78,19 +81,19 @@ void GLViewFishGame::onCreate()
       this->pe->setGravityScalar( Aftr::GRAVITY );
    }
 
-   //Vector camLookDir = this->cam->getLookDirection();
-   //Vector camNormalDir = this->cam->getNormalDirection();
-   //Vector camPos = this->cam->getPosition();
+   Vector camLookDir = this->cam->getLookDirection();
+   Vector camNormalDir = this->cam->getNormalDirection();
+   Vector camPos = this->cam->getPosition();
 
-   //this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
+   this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
 
-   //this->cam->setPosition(camPos);
-   //this->cam->setCameraNormalDirection(camNormalDir);
-   //this->cam->setCameraLookDirection(camLookDir);
-   //this->cam->startCameraBehavior();
-   //this->cam->setLabel("Camera"); 
+   this->cam->setPosition(camPos);
+   this->cam->setCameraNormalDirection(camNormalDir);
+   this->cam->setCameraLookDirection(camLookDir);
+   this->cam->startCameraBehavior();
+   this->cam->setLabel("Camera"); 
 
-   this->setActorChaseType(STANDARDEZNAV);
+   //this->setActorChaseType(STANDARDEZNAV);
 }
 
 
@@ -173,14 +176,37 @@ void GLViewFishGame::onMouseMove( const SDL_MouseMotionEvent& e )
 void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 {
    GLView::onKeyDown( key );
-   if( key.keysym.sym == SDLK_0 )
-      this->setNumPhysicsStepsPerRender( 1 );
+
+   if (key.keysym.sym == SDLK_0)
+   {
+       pos -= 1.5;
+       for (int i = 0; i < sticks.size() - 1; i++)
+       {
+       }
+       anchor2->setPosition(Vector(37, 0, pos));
+   }
+
+   if (key.keysym.sym == SDLK_9)
+   {
+       pos += 0.5f;
+       anchor2->setPosition(Vector(37, 0, pos));
+   }
 
    if( key.keysym.sym == SDLK_1 )
    {
-       occulude = blocker->getNearestPointWhereLineIntersectsMe(vendor->getPosition(), this->cam->getPosition(), rayOutput);
+       std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+
+       Vector camStuff = this->cam->getCameraLookAtPoint() + (this->cam->getLookDirection() * 5);
+
+       int distance = this->cam->getPosition().distanceFrom(vendor->getPosition());
+
+       //WO* wo = WO::New(shinyRedPlasticCube);
+       //wo->setPosition(camStuff);
+       //worldLst->push_back(wo);
+       occulude = blocker->getNearestPointWhereLineIntersectsMe(camStuff, vendor->getPosition(), rayOutput);
 
        std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
+       std::cout << "Distance between Vendor and Cam: " << distance << std::endl;
        if (occulude == AftrGeometricTerm::geoSUCCESS)
        {
            std::cout << "POINT FOUND" << std::endl;
@@ -189,6 +215,8 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
        {
            std::cout << "NO POINT FOUND" << std::endl;
        }
+
+
    }
    if (key.keysym.sym == SDLK_2)
    {
@@ -196,20 +224,39 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
        //joint->drive
 
        joint = PxD6JointCreate(*physics, anchor->b, PxTransform(PxVec3(offset - 0.9, 0, 0)), sticks[0]->a, PxTransform(PxVec3(-offset + 0.9, 0, 0)));
-       //joint->setMotion(PxD6Axis::eY, PxD6Motion::eFREE);
-       //joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
+       joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
+       joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
+       //joint->setMotion(PxD6Axis::eZ, PxD6Motion::eFREE);
 
        for (int i = 0; i < sticks.size() - 1; i++)
        {
            std::cout << offset << std::endl;
-           joint = PxD6JointCreate(*physics, sticks[i]->a, PxTransform(PxVec3(offset - 0.9, 0, 0)), sticks[i + 1]->a, PxTransform(PxVec3(-offset + 0.9, 0, 0)));
+           //if (i == 8)
+           //{
+           //    Stringjoint = PxSphericalJointCreate(*physics, sticks[i]->a, PxTransform(PxVec3(offset - 0.9, 0, 0)), sticks[i + 1]->a, PxTransform(PxVec3(-offset + 0.9, 0, 0)));
+           //}
+           //else
+                joint = PxD6JointCreate(*physics, sticks[i]->a, PxTransform(PxVec3(offset - 0.9, 0, 0)), sticks[i + 1]->a, PxTransform(PxVec3(-offset + 0.9, 0, 0)));
+           joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
+           joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
            //sticks[i]->a->setRigidBodyFlag(PxRigidBodyFlag::eKINEMATIC, true);
            //joint->setDrive(PxD6Drive::eX, PxD6JointDrive(1000, 100, FLT_MAX, true));
            //joint->setDrive(PxD6Drive::eY, PxD6JointDrive(1000, 100, FLT_MAX, true));
            //joint->setDrive(PxD6Drive::eZ, PxD6JointDrive(1000, 100, FLT_MAX, true));
            //joint->setMotion(PxD6Axis::eTWIST, PxD6Motion::eFREE);
        }
-       joint = PxD6JointCreate(*physics, sticks[9]->a, PxTransform(PxVec3(0, 0, -2)), strings[0]->a, PxTransform(PxVec3(0, 0, 2)));
+
+         joint = PxD6JointCreate(*physics, sticks[9]->a, PxTransform(PxVec3(0, 0, -2)), strings[0]->a, PxTransform(PxVec3(0, 0, 2)));
+         joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
+         joint->setDrive(PxD6Drive::eZ, PxD6JointDrive(100, 500, 1000, true));
+         joint->setDriveVelocity(PxVec3(0.0f, 0.0f, 100.0f), PxVec3(0.0f), true);
+
+
+         joint = PxD6JointCreate(*physics, strings[0]->a, PxTransform(PxVec3(0, 0, -2)), strings[1]->a, PxTransform(PxVec3(0, 0, 2)));
+
+
+
+       //joint = PxD6JointCreate(*physics, sticks[9]->a, PxTransform(PxVec3(offset - 0.9, 0, -3)), anchor2->b, PxTransform(PxVec3(-offset + 0.9, 0, 3)));
 
        //physx::PxFixedJoint* joint = nullptr;
 
@@ -230,15 +277,68 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
    }
    if (key.keysym.sym == SDLK_3)
    {
-       joint->setDrive(PxD6Drive::eY, PxD6JointDrive(0, 1000, FLT_MAX, true));
-       joint->setDriveVelocity(PxVec3(0.0f, -50.0f, 0.0f), PxVec3(0.0f), true);
+       std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+
+       WO* wo = WO::New(shinyRedPlasticCube);
+       wo->setPosition(-30, 0, -1000);
+       worldLst->push_back(wo);
+
+       //joint->setMotion(PxD6Axis::eX, PxD6Motion::eFREE);
+       //joint->setMotion(PxD6Axis::eY, PxD6Motion::eFREE);
+       joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
+       joint->setDrive(PxD6Drive::eZ, PxD6JointDrive(100, 500, 1000, true));
+       //joint->setDrivePosition(sticks[0]->getTransform(wo->getPose()), true);
+       joint->setDriveVelocity(PxVec3(0.0f, 0.0f, 100.0f), PxVec3(0.0f), true);
+
+
+       std::cout << "created \n";
    }
    if (key.keysym.sym == SDLK_SPACE)
    {
-       std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+       //std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
 
-       mass += 1;
-       strings[0]->a->addForce(PxVec3(0, 0, -500));
+       //mass += 1;
+       //strings[0]->a->addForce(PxVec3(0, 0, -500));
+
+       fishtime->setFishBite(true);
+
+   }
+
+   if (key.keysym.sym == SDLK_4)
+   {
+       fishtime = new CameraFishing(this, this->cam->getMouseHandler());
+
+       std::cout << "FISH ACTIVATE" << std::endl;
+
+       Vector camLookDir = this->cam->getLookDirection();
+       Vector camNormalDir = this->cam->getNormalDirection();
+       Vector camPos = this->cam->getPosition();
+
+       this->cam = fishtime;
+
+       this->cam->setPosition(camPos);
+       this->cam->setCameraNormalDirection(camNormalDir);
+       this->cam->setCameraLookDirection(camLookDir);
+       this->cam->startCameraBehavior();
+       this->cam->setLabel("FishCamera");
+
+       cam->rotateToIdentity();
+       cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
+       cam->setPosition(Vector(120, 125, 6));
+   }
+
+   if (key.keysym.sym == SDLK_5)
+   {
+       Vector camLookDir = this->cam->getLookDirection();
+       Vector camNormalDir = this->cam->getNormalDirection();
+       Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+
+       this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
+
+       this->cam->setPosition(camPos);
+       this->cam->setCameraNormalDirection(camNormalDir);
+       this->cam->setCameraLookDirection(camLookDir);
+       this->cam->startCameraBehavior();
    }
 
 
@@ -285,6 +385,7 @@ void Aftr::GLViewFishGame::loadMap()
 
    PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
    PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0, 0, 1, 0), *gMaterial);//good for the grass
+   //groundPlane->setGlobalPose(PxTransform(PxVec3(0, 0, -1000)));
    scene->addActor(*groundPlane);
 
    std::string shinyRedPlasticCube( ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl" );
@@ -315,13 +416,16 @@ void Aftr::GLViewFishGame::loadMap()
    vendor->setPosition(0, 0, 10);
    worldLst->push_back(vendor);
 
-   //blocker = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
-   //blocker->setPosition(0, 8, 10);
-   ////blocker->isVisible = false;
-   //worldLst->push_back(blocker);
+   blocker = WO::New(shinyRedPlasticCube, Vector(0.5, 0.5, 0.5));
+   blocker->setPosition(0, 8, 10);
+   //blocker->isVisible = false;
+   worldLst->push_back(blocker);
 
    anchor = WOPxStatic::New(shinyRedPlasticCube, Vector(0, 0, 50), Vector(1, 0.5, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
    worldLst->push_back(anchor);
+
+   //anchor2 = WOPxStatic::New(shinyRedPlasticCube, Vector(40, 0, 30), Vector(0.5, 0.5, 1.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
+   //worldLst->push_back(anchor2);
 
    sticks.resize(10);
    strings.resize(10);
@@ -335,9 +439,13 @@ void Aftr::GLViewFishGame::loadMap()
    }
    
    strings[0] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(0.5, 0.5, 1.5));
-   strings[0]->setPosition(Vector(offset - 4, 0, 45));
+   strings[0]->setPosition(Vector(offset, 0, 45));
    worldLst->push_back(strings[0]);
    holder = strings[0];
+
+   strings[1] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(0.5, 0.5, 1.5));
+   strings[1]->setPosition(Vector(offset, 0, 37));
+   worldLst->push_back(strings[1]);
 
 
    //{
@@ -452,7 +560,7 @@ void Aftr::GLViewFishGame::loadMap()
    }
 
    { 
-      ////Create the infinite grass plane (the floor)
+      //Create the infinite grass plane (the floor)
       WO* wo = WO::New( grass, Vector( 1, 1, 1 ), MESH_SHADING_TYPE::mstFLAT );
       wo->setPosition( Vector( 0, 0, 0 ) );
       wo->renderOrderType = RENDER_ORDER_TYPE::roOPAQUE;
@@ -562,46 +670,47 @@ void Aftr::GLViewFishGame::loadMap()
    //Make a Dear Im Gui instance via the WOImGui in the engine... This calls
    //the default Dear ImGui demo that shows all the features... To create your own,
 
-   GuiText* yo = GuiText::New(nullptr);
-   //gui->setLabel( "My Gui" );
-   //gui->subscribe_drawImGuiWidget(
-   //   [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
-   //   {
-   //        //WOImGui::draw_AftrImGui_Demo(gui);
-   //        //yo->drawImGui_for_this_frame();
-   //        //if (ImGui::SliderAngle("Rel X Axis", &object_xyz[0], -180, 180)) {
-   //        //    pressF->getModel()->rotateAboutRelX(object_xyz[0] - object_xyz_prev[0]);
-   //        //    object_xyz_prev[0] = object_xyz[0];
-   //        //}
+   //GuiText* yo = GuiText::New(nullptr);
+   WOImGui* gui = WOImGui::New(nullptr);
+   gui->setLabel( "My Gui" );
+   gui->subscribe_drawImGuiWidget(
+      [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
+      {
+           //WOImGui::draw_AftrImGui_Demo(gui);
+           //yo->drawImGui_for_this_frame();
+           //if (ImGui::SliderAngle("Rel X Axis", &object_xyz[0], -180, 180)) {
+           //    pressF->getModel()->rotateAboutRelX(object_xyz[0] - object_xyz_prev[0]);
+           //    object_xyz_prev[0] = object_xyz[0];
+           //}
 
-   //        //if (ImGui::SliderAngle("Rel Y Axis", &object_xyz[1], -180, 180)) {
-   //        //    pressF->getModel()->rotateAboutRelY(object_xyz[1] - object_xyz_prev[1]);
-   //        //    object_xyz_prev[1] = object_xyz[1];
-   //        //}
+           //if (ImGui::SliderAngle("Rel Y Axis", &object_xyz[1], -180, 180)) {
+           //    pressF->getModel()->rotateAboutRelY(object_xyz[1] - object_xyz_prev[1]);
+           //    object_xyz_prev[1] = object_xyz[1];
+           //}
 
-   //        //if (ImGui::SliderAngle("Rel Z Axis", &object_xyz[2], -180, 180)) {
-   //        //    pressF->getModel()->rotateAboutRelZ(object_xyz[2] - object_xyz_prev[2]);
-   //        //    object_xyz_prev[2] = object_xyz[2];
-   //        //}
-   //    
+           //if (ImGui::SliderAngle("Rel Z Axis", &object_xyz[2], -180, 180)) {
+           //    pressF->getModel()->rotateAboutRelZ(object_xyz[2] - object_xyz_prev[2]);
+           //    object_xyz_prev[2] = object_xyz[2];
+           //}
+       
 
-   //        // if (ImGui::SliderAngle("Global X Axis", &global_xyz[0], -180, 180)) {
-   //        //     pressF->rotateAboutGlobalX(global_xyz[0] - global_xyz_prev[0]);
-   //        //     global_xyz_prev[0] = global_xyz[0];
-   //        // }
+           // if (ImGui::SliderAngle("Global X Axis", &global_xyz[0], -180, 180)) {
+           //     pressF->rotateAboutGlobalX(global_xyz[0] - global_xyz_prev[0]);
+           //     global_xyz_prev[0] = global_xyz[0];
+           // }
 
-   //        // if (ImGui::SliderAngle("Global Y Axis", &global_xyz[1], -180, 180)) {
-   //        //     pressF->rotateAboutGlobalY(global_xyz[1] - global_xyz_prev[1]);
-   //        //     global_xyz_prev[1] = global_xyz[1];
-   //        // }
+           // if (ImGui::SliderAngle("Global Y Axis", &global_xyz[1], -180, 180)) {
+           //     pressF->rotateAboutGlobalY(global_xyz[1] - global_xyz_prev[1]);
+           //     global_xyz_prev[1] = global_xyz[1];
+           // }
 
-   //        // if (ImGui::SliderAngle("Global Z Axis", &global_xyz[2], -180, 180)) {
-   //        //     pressF->rotateAboutGlobalZ(global_xyz[2] - global_xyz_prev[2]);
-   //        //     global_xyz_prev[2] = global_xyz[2];
-   //        // }
-   //   } );
-   //this->worldLst->push_back( gui );
-   this->worldLst->push_back(yo);
+           // if (ImGui::SliderAngle("Global Z Axis", &global_xyz[2], -180, 180)) {
+           //     pressF->rotateAboutGlobalZ(global_xyz[2] - global_xyz_prev[2]);
+           //     global_xyz_prev[2] = global_xyz[2];
+           // }
+      } );
+   this->worldLst->push_back( gui );
+   //this->worldLst->push_back(yo);
    createFishGameWayPoints();
 }
 
