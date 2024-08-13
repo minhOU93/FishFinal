@@ -50,6 +50,7 @@ CameraFishing::~CameraFishing()
 {
 }
 
+
 void CameraFishing::fillVectorWithRandomValues(std::vector<int>& vec, int minValue, int maxValue) {
     // Random number generator
     std::random_device rd;  // Seed
@@ -79,11 +80,6 @@ void CameraFishing::shakeCamera()
     }
 
     this->changeLookAtViaMouse(5, 0);
-
-    std::cout << "(" << this->getLookDirection().x << ", " << this->getLookDirection().y << ", " << this->getLookDirection().z << ")" << std::endl;
-   /* std::cout << "CAMERA POINT: ";
-    std::cout << "(" << this->getCameraLookAtPoint().x << ", " << this->getCameraLookAtPoint().y << ", " << this->getCameraLookAtPoint().z << ")" << std::endl;*/
-
 
 }
 
@@ -214,7 +210,7 @@ void CameraFishing::onMouseMove(const SDL_MouseMotionEvent& e)
     //    rel_y = 0;
     //}
 
-    //if(!fish_struggle) this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
+    if(!fish_struggle) this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
 }
 
 void CameraFishing::setCameraVelocityMultiplier(float camVelMultiplier)

@@ -10,6 +10,7 @@
 #include "WOString.h"
 #include "GuiText.h"
 #include "CameraFishing.h"
+#include "WOPxKinematic.h"
 
 namespace Aftr
 {
@@ -41,7 +42,7 @@ public:
    virtual void onMouseMove( const SDL_MouseMotionEvent& e );
    virtual void onKeyDown( const SDL_KeyboardEvent& key );
    virtual void onKeyUp( const SDL_KeyboardEvent& key );
-
+   void createFishingRod();
    const Uint8* keystates = SDL_GetKeyboardState(NULL);
 
    WO* vendor = nullptr;
@@ -77,6 +78,23 @@ public:
    //physx::PxFixedJoint* joint = nullptr;
 
    CameraFishing* fishtime;
+   CameraFirstPerson* firstPerson;
+
+
+   //////////////////////////////////////////////////
+
+   WOPxStatic* fishingPole = nullptr;
+   std::vector<WOPxObj*> lineCut;
+   std::vector<WOPxObj*> lineCut2;
+
+   WOPxObj* lineBase;
+   WOPxObj* lineBase2;
+
+   WOPxObj* poleEnd;
+   WOPxObj* fishString;
+   WOPxObj* fishBait;
+
+   WOPxKinematic* tester;
 
 protected:
    GLViewFishGame( const std::vector< std::string >& args );

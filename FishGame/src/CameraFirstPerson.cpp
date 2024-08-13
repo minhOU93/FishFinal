@@ -25,6 +25,22 @@ CameraFirstPerson::~CameraFirstPerson()
 {
 }
 
+void CameraFirstPerson::trackRod()
+{
+    //ector yolo(this->getCameraLookAtPoint().x + 4, this->getCameraLookAtPoint().y, this->getCameraLookAtPoint().z);
+    Vector inFront(this->getCameraLookAtPoint() + (this->getLookDirection() * 9));
+    Mat4 hello;
+
+    hello.setPosition(Vector(inFront.x, inFront.y, inFront.z));
+    hello.setXYZ(this->getPose().getX(), this->getPose().getY(), this->getPose().getZ());
+
+    fishingRod->setPose(hello);
+
+    fishingRod->rotateAboutRelZ(94 * DEGtoRAD);
+
+    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * -4.2);
+} 
+
 
 void CameraFirstPerson::update()
 {
@@ -51,14 +67,7 @@ void CameraFirstPerson::update()
         this->moveRight();
     }
 
-    if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownRightButton())
-    {
-
-        catch_score += 1.0f;
-
-        std::cout << catch_score << std::endl;
-
-    }
+    if(fishingRod != nullptr) trackRod();
 }
 
 void CameraFirstPerson::onMouseDown(const SDL_MouseButtonEvent& e)

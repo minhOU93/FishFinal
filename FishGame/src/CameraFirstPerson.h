@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CameraStandard.h"
+#include "WO.h"
 
 namespace Aftr
 {
@@ -27,6 +28,9 @@ namespace Aftr
 		virtual void moveRight(); ///< Pans camera to the 'right' (along camera's local -y axis)
 		virtual void setCameraVelocityMultiplier(float camVelMultiplier); ///< Multiplier must be greater than zero
 
+		void trackRod();
+		void setRod(WO* rod) { fishingRod = rod; }
+
 	protected:
 		float wheelButtonVelocityScalar;
 		int wheelScrollCounter;
@@ -37,5 +41,7 @@ namespace Aftr
 		int rel_y;
 
 		float catch_score;
+
+		WO* fishingRod = nullptr;
 	};
 }
