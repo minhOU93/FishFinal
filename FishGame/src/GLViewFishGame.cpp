@@ -39,6 +39,7 @@
 #include "WOImGui.h" //GUI Demos also need to #include "AftrImGuiIncludes.h"
 #include "AftrImGuiIncludes.h"
 #include "AftrGLRendererBase.h"
+#include "WOCameraSink.h"
 
 using namespace Aftr;
 using namespace physx;
@@ -111,6 +112,17 @@ void GLViewFishGame::updateWorld()
                           //If you want to add additional functionality, do it after
                           //this call.
 
+   if (this->cam == fishtime)
+   {
+       fishtime->spawnRod();
+       firstPerson->despawnRod();
+   }
+   else
+   {
+       fishtime->despawnRod();
+       firstPerson->spawnRod();
+   }
+
    scene->simulate(1.0 / 60.0);
    {
        physx::PxU32 errorState = 0;
@@ -148,189 +160,6 @@ void GLViewFishGame::updateWorld()
            //}
        }
    }
-
-   if (fishBait->a != nullptr)
-    std::cout << poleEnd->a->getLinearVelocity().x << " " << fishBait->a->getLinearVelocity().y << " " << fishBait->a->getLinearVelocity().z << std::endl;
-}
-
-void GLViewFishGame::createFishingRod()
-{
-    std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole_new.fbx");
-    std::string bait(ManagerEnvironmentConfiguration::getLMM() + "models/bait.fbx");
-    std::string line(ManagerEnvironmentConfiguration::getLMM() + "models/line.fbx");
-    std::string pole_end(ManagerEnvironmentConfiguration::getLMM() + "models/pole_end.fbx");
-    std::string pole_line1_base(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line1_base.fbx");
-    std::string pole_line1_cut(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line1_cut.fbx");
-    std::string pole_line2_base(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line2_base.fbx");
-    std::string pole_line2_cut(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line2_cut.fbx");
-    std::string reel(ManagerEnvironmentConfiguration::getLMM() + "models/reel.fbx");
-    std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
-
-    int z_off = 8;
-
-    {
-        fishingPole = WOPxStatic::New(pole, Vector(0, 20.02, 6.99 + z_off), Vector(0.1, 0.1, 0.1), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-        fishingPole->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                fishingPole->getModel()->getSkins().push_back(std::move(spidey));
-                fishingPole->getModel()->useNextSkin();
-            });
-        fishingPole->setPosition(Vector(0, 20.04, 6.99 + z_off));
-        worldLst->push_back(fishingPole);
-    }
-
-    //base 
-    {
-        lineBase = WOPxObj::New(pole_line1_base, physics, scene, Vector(0.1, 0.1, 0.1));
-        lineBase->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                lineBase->getModel()->getSkins().push_back(std::move(spidey));
-                lineBase->getModel()->useNextSkin();
-
-            });
-        lineBase->setPosition(Vector(0.02, 13.93, 7.55 + z_off));
-        worldLst->push_back(lineBase);
-    }
-
-    lineCut.resize(11);
-    lineCut2.resize(11);
-
-    // base to cut
-    {
-        lineCut[0] = WOPxObj::New(pole_line1_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-        lineCut[0]->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                lineCut[0]->getModel()->getSkins().push_back(std::move(spidey));
-                lineCut[0]->getModel()->useNextSkin();
-
-            });
-        lineCut[0]->setPosition(Vector(0.02, 13.55, 7.73 + z_off));
-        worldLst->push_back(lineCut[0]);
-    }
-    // cut length
-    {
-        float offset = -0.315;
-        for (int i = 1; i < 11; i++)
-        {
-            lineCut[i] = WOPxObj::New(pole_line1_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-            lineCut[i]->upon_async_model_loaded([skin, this, i]()
-                {
-                    ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                    spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                    lineCut[i]->getModel()->getSkins().push_back(std::move(spidey));
-                    lineCut[i]->getModel()->useNextSkin();
-
-                });
-            lineCut[i]->setPosition(Vector(0.02, 13.555 + offset, 7.73 + z_off));
-            worldLst->push_back(lineCut[i]);
-
-            offset -= 0.315;
-        }
-    }
-
-    // last cut to base 2
-    {
-        lineBase2 = WOPxObj::New(pole_line2_base, physics, scene, Vector(0.1, 0.1, 0.1));
-        lineBase2->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                lineBase2->getModel()->getSkins().push_back(std::move(spidey));
-                lineBase2->getModel()->useNextSkin();
-
-            });
-        lineBase2->setPosition(Vector(0.02, 10.03, 7.61 + z_off));
-        worldLst->push_back(lineBase2);
-    }
-
-
-    // base 2 to cut2
-    {
-        lineCut2[0] = WOPxObj::New(pole_line2_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-        lineCut2[0]->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                lineCut2[0]->getModel()->getSkins().push_back(std::move(spidey));
-                lineCut2[0]->getModel()->useNextSkin();
-
-            });
-        lineCut2[0]->setPosition(Vector(0.02, 9.65, 7.745 + z_off));
-        worldLst->push_back(lineCut2[0]);
-    }
-
-    // cut2 length
-    {
-        float offset = -0.277;
-        for (int i = 1; i < 11; i++)
-        {
-            lineCut2[i] = WOPxObj::New(pole_line2_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-            lineCut2[i]->upon_async_model_loaded([skin, this, i]()
-                {
-                    ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                    spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                    lineCut2[i]->getModel()->getSkins().push_back(std::move(spidey));
-                    lineCut2[i]->getModel()->useNextSkin();
-
-                });
-            lineCut2[i]->setPosition(Vector(0.02, 9.65 + offset, 7.746 + z_off));
-            worldLst->push_back(lineCut2[i]);
-
-            offset -= 0.277;
-        }
-    }
-
-    // last cut2 to pole end
-    {
-        poleEnd = WOPxObj::New(pole_end, physics, scene, Vector(0.1, 0.1, 0.1));
-        poleEnd->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                poleEnd->getModel()->getSkins().push_back(std::move(spidey));
-                poleEnd->getModel()->useNextSkin();
-
-            });
-        poleEnd->setPosition(Vector(0.02, 6.512, 7.617 + z_off));
-        worldLst->push_back(poleEnd);
-    }
-
-    // line
-    {
-        fishString = WOPxObj::New(line, physics, scene, Vector(0.1, 0.1, 0.1));
-        fishString->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                fishString->getModel()->getSkins().push_back(std::move(spidey));
-                fishString->getModel()->useNextSkin();
-
-            });
-        fishString->setPosition(Vector(0.02, 6.252, 3.27 + z_off));
-        worldLst->push_back(fishString);
-    }
-
-    // bait
-    {
-        fishBait = WOPxObj::New(bait, physics, scene, Vector(0.1, 0.1, 0.1));
-        fishBait->upon_async_model_loaded([skin, this]()
-            {
-                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                fishBait->getModel()->getSkins().push_back(std::move(spidey));
-                fishBait->getModel()->useNextSkin();
-
-            });
-        fishBait->setPosition(Vector(-0.015, 6.252, 4.27));
-        worldLst->push_back(fishBait);
-    }
-
 }
 
 void GLViewFishGame::onResizeWindow( GLsizei width, GLsizei height )
@@ -354,6 +183,8 @@ void GLViewFishGame::onMouseUp( const SDL_MouseButtonEvent& e )
 void GLViewFishGame::onMouseMove( const SDL_MouseMotionEvent& e )
 {
    GLView::onMouseMove( e );
+
+   //fishingRod[3]->getModel()->rotateAboutRelZ(0.5 * DEGtoRAD);
 }
 
 
@@ -363,11 +194,6 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_0)
    {
-       pos -= 1.5;
-       for (int i = 0; i < sticks.size() - 1; i++)
-       {
-       }
-       anchor2->setPosition(Vector(37, 0, pos));
    }
 
    if (key.keysym.sym == SDLK_9)
@@ -378,135 +204,69 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
    if( key.keysym.sym == SDLK_1 )
    {
-       std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+       //std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
 
-       Vector camStuff = this->cam->getCameraLookAtPoint() + (this->cam->getLookDirection() * 5);
+       //Vector camStuff = this->cam->getCameraLookAtPoint() + (this->cam->getLookDirection() * 5);
 
-       int distance = this->cam->getPosition().distanceFrom(vendor->getPosition());
+       //int distance = this->cam->getPosition().distanceFrom(vendor->getPosition());
 
-       //WO* wo = WO::New(shinyRedPlasticCube);
-       //wo->setPosition(camStuff);
-       //worldLst->push_back(wo);
-       occulude = blocker->getNearestPointWhereLineIntersectsMe(camStuff, vendor->getPosition(), rayOutput);
+       ////WO* wo = WO::New(shinyRedPlasticCube);
+       ////wo->setPosition(camStuff);
+       ////worldLst->push_back(wo);
+       //occulude = blocker->getNearestPointWhereLineIntersectsMe(camStuff, vendor->getPosition(), rayOutput);
 
-       std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
-       std::cout << "Distance between Vendor and Cam: " << distance << std::endl;
-       if (occulude == AftrGeometricTerm::geoSUCCESS)
-       {
-           std::cout << "POINT FOUND" << std::endl;
-       }
-       else
-       {
-           std::cout << "NO POINT FOUND" << std::endl;
-       }
+       //std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
+       //std::cout << "Distance between Vendor and Cam: " << distance << std::endl;
+       //if (occulude == AftrGeometricTerm::geoSUCCESS)
+       //{
+       //    std::cout << "POINT FOUND" << std::endl;
+       //}
+       //else
+       //{
+       //    std::cout << "NO POINT FOUND" << std::endl;
+       //}
 
 
    }
    if (key.keysym.sym == SDLK_2)
-   {
-       //int offset = sticks[0]->getModel()->getBoundingBox().getlxlylz().x;
-       //joint->drive
+   {   
+       std::cout << rel_x << std::endl;
+       fishingLines[1]->moveRelative(Vector(0, 0, -rel_x * 0.1));
+       fishingLines[2]->moveRelative(Vector(0, 0, -rel_x * 0.1));
+       fishingRod[2]->moveRelative(Vector(0, 0, -rel_x * 0.1));
 
-       // joint of pole to first base
-       joint = PxD6JointCreate(*physics, lineBase->a, PxTransform(PxVec3(0, 0.01, 0)), fishingPole->b , PxTransform(PxVec3(0, -6, 3)));
-       joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
-       joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
-       joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
-
-       joint = PxD6JointCreate(*physics, lineBase->a, PxTransform(PxVec3(0, -0.305, 0.18)), lineCut[0]->a, PxTransform(PxVec3(0, 0.01, 0)));
-       joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
-       joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
-       //joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
-
-       // joints for line
-       for (int i = 0; i < lineCut.size() - 1; i++)
-       {
-           joint = PxD6JointCreate(*physics, lineCut[i]->a, PxTransform(PxVec3(0, -0.295, 0)), lineCut[i + 1]->a, PxTransform(PxVec3(0, 0.01, 0)));
-           joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
-           joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
-           //joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
-       }
-
-       // last cut to base2 joint
-       joint = PxD6JointCreate(*physics, lineCut[10]->a, PxTransform(PxVec3(0, -0.295, -0.12)), lineBase2->a, PxTransform(PxVec3(0, 0.01, 0)));
-
-       //joint base2 to fist cut2
-       joint = PxD6JointCreate(*physics, lineBase2->a, PxTransform(PxVec3(0, -0.295, 0.13)), lineCut2[0]->a, PxTransform(PxVec3(0, 0.01, 0)));
-
-       //joints for cut2
-       for (int i = 0; i < lineCut2.size() - 1; i++)
-       {
-           joint = PxD6JointCreate(*physics, lineCut2[i]->a, PxTransform(PxVec3(0, -0.255, 0)), lineCut2[i + 1]->a, PxTransform(PxVec3(0, 0.01, 0)));
-           joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
-           joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
-           //joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
-       }
-
-       // last cut2 to pole end
-       joint = PxD6JointCreate(*physics, lineCut2[10]->a, PxTransform(PxVec3(0, -0.255, -0.12)), poleEnd->a, PxTransform(PxVec3(0, 0.01, 0)));
-       joint->setMotion(PxD6Axis::eY, PxD6Motion::eLOCKED);
-       joint->setMotion(PxD6Axis::eX, PxD6Motion::eLOCKED);
-
-       // pole end to line
-       physx::PxDistanceJoint* super;
-       super = PxDistanceJointCreate(*physics, poleEnd->a, PxTransform(PxVec3(0, -0.234, 0)), fishString->a, PxTransform(PxVec3(0, 0.001, 4.2)));
-       super->setMaxDistance(10.0f);
-       super->setDistanceJointFlag(PxDistanceJointFlag::eMAX_DISTANCE_ENABLED, true);
-
-       //super->setLimitCone(PxJointLimitCone(PxPi / 24, PxPi / 6));
-       //super->setSphericalJointFlag(PxSphericalJointFlag::eLIMIT_ENABLED, true);
-        
-       joint = PxD6JointCreate(*physics, poleEnd->a, PxTransform(PxVec3(0, -0.234, 0)), fishString->a, PxTransform(PxVec3(0, 0.01, 4.2)));
-
-       // bait to line
-       joint = PxD6JointCreate(*physics, fishString->a, PxTransform(PxVec3(0, 0, -4.2)), fishBait->a, PxTransform(PxVec3(0.05, 0, 1.5)) );   
+       fishingRod[1]->getModel()->rotateAboutRelX(-5 * DEGtoRAD);
 
    }
    if (key.keysym.sym == SDLK_3)
    {
-       std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
 
-       WO* wo = WO::New(shinyRedPlasticCube);
-       wo->setPosition(-30, 0, -1000);
-       worldLst->push_back(wo);
+       for (int i = 0; i < fishingLines.size(); i++)
+       {
+           fishingLines[i]->getModel()->rotateAboutRelY(2 * DEGtoRAD);
+       }
+       for (int i = 0; i < fishingRod.size(); i++)
+       {
+           fishingRod[i]->getModel()->rotateAboutRelZ(2 * DEGtoRAD);
+       }
 
-       joint->setMotion(PxD6Axis::eY, PxD6Motion::eFREE);
-       //joint->setMotion(PxD6Axis::eZ, PxD6Motion::eFREE);
-       //joint->setMotion(PxD6Axis::eZ, PxD6Motion::eLIMITED);
-
-       joint->setDrive(PxD6Drive::eY, PxD6JointDrive(100, 500, 10, true));
-       //joint->setDrive(PxD6Drive::eZ, PxD6JointDrive(100, 500, 0, true));
-
-       //joint->setDrivePosition(PxTransform(PxVec3(0, -500, -50)), true);
-       joint->setDriveVelocity(PxVec3(0.0f, -25.0f, -50.0f), PxVec3(0.0f), true);
-
-
-       std::cout << "created \n";
    }
    if (key.keysym.sym == SDLK_SPACE)
    {
-       //std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
-
-       //mass += 1;
-       //strings[0]->a->addForce(PxVec3(0, 0, -500));
-
-       fishBait->a->addForce(PxVec3(0, 0, -500));
-
-       //fishtime->setFishBite(true);
 
    }
 
    if (key.keysym.sym == SDLK_4)
    {
-       fishtime = new CameraFishing(this, this->cam->getMouseHandler());
-
        std::cout << "FISH ACTIVATE" << std::endl;
 
        Vector camLookDir = this->cam->getLookDirection();
        Vector camNormalDir = this->cam->getNormalDirection();
        Vector camPos = this->cam->getPosition();
+       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
 
        this->cam = fishtime;
+       this->cam->setMouseHandler(camMouseHandler);
 
        this->cam->setPosition(camPos);
        this->cam->setCameraNormalDirection(camNormalDir);
@@ -521,27 +281,28 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_5)
    {
-       //Vector camLookDir = this->cam->getLookDirection();
-       //Vector camNormalDir = this->cam->getNormalDirection();
-       //Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+       Vector camLookDir = this->cam->getLookDirection();
+       Vector camNormalDir = this->cam->getNormalDirection();
+       Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
 
-       //this->cam = new CameraFirstPerson(this, this->cam->getMouseHandler());
+       this->cam = firstPerson;
+       this->cam->setMouseHandler(camMouseHandler);
 
-       //this->cam->setPosition(camPos);
-       //this->cam->setCameraNormalDirection(camNormalDir);
-       //this->cam->setCameraLookDirection(camLookDir);
-       //this->cam->startCameraBehavior();
+       this->cam->setPosition(camPos);
+       this->cam->setCameraNormalDirection(camNormalDir);
+       this->cam->setCameraLookDirection(camLookDir);
+       this->cam->startCameraBehavior();
+
 
        
 
-       this->setActorChaseType(STANDARDEZNAV);
+       //this->setActorChaseType(STANDARDEZNAV);
    }
 
    if (key.keysym.sym == SDLK_6)
    {
-       joint->setDriveVelocity(PxVec3(0.0f, 25.0f, 0.0f), PxVec3(0.0f), true);
-
-       //joint->setDrive(PxD6Drive::eY, PxD6JointDrive(100, 500, 0, true));
+       fishtime->setBeginGame(true);
    }
 
 
@@ -569,6 +330,11 @@ void Aftr::GLViewFishGame::loadMap()
    this->cam->setPosition( 5,17, 7 );
    this->cam->rotateAboutRelZ(-180 * DEGtoRAD);
 
+   fishingRod.resize(3);
+   fishingLines.resize(3);
+
+   fishtime = new CameraFishing(this, this->cam->getMouseHandler());
+
    {
        this->foundation = PxCreateFoundation(PX_PHYSICS_VERSION, a, e);
        this->physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, physx::PxTolerancesScale());
@@ -586,6 +352,8 @@ void Aftr::GLViewFishGame::loadMap()
    //scene->setGravity(physx::PxVec3(0, 0, -2.81f));
    articulation = physics->createArticulationReducedCoordinate();
 
+   WOCameraSink* hello;
+
    PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
    PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0, 0, 1, 0), *gMaterial);//good for the grass
    groundPlane->setGlobalPose(PxTransform(PxVec3(0, 0, -1000)));
@@ -597,24 +365,30 @@ void Aftr::GLViewFishGame::loadMap()
    std::string human( ManagerEnvironmentConfiguration::getSMM() + "/models/human_chest.wrl" );
 
    std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole.fbx");
+   std::string bait(ManagerEnvironmentConfiguration::getLMM() + "models/bait.fbx");
+   std::string reel (ManagerEnvironmentConfiguration::getLMM() + "models/reel.fbx");
+   std::string line(ManagerEnvironmentConfiguration::getLMM() + "models/line.fbx");
+   std::string line2(ManagerEnvironmentConfiguration::getLMM() + "models/line2.fbx");
 
-   //tester = WOPxKinematic::New(shinyRedPlasticCube, physics, scene);
-   //tester->setPosition(Vector(0, 0, 10));
-   //worldLst->push_back(tester);
-
+   std::string hand(ManagerEnvironmentConfiguration::getLMM() + "models/hand.obj");
 
    std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
    std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
    std::string fontArial(ManagerEnvironmentConfiguration::getSMM() + "/fonts/arial.ttf");
 
-   //pressF = WOString::New("Press F to Shop", fontArial, 240, 10);
-   //worldLst->push_back(pressF);
+   std::string blue_fish(ManagerEnvironmentConfiguration::getLMM() + "models/Blue_Fish/blue_fish.obj");
+   std::string fish(ManagerEnvironmentConfiguration::getLMM() + "models/common_fish/fish.obj");
+   std::string bigfish(ManagerEnvironmentConfiguration::getLMM() + "models/bigfish/Fish.fbx");
+   std::string long_fin(ManagerEnvironmentConfiguration::getLMM() + "models/long_fin/long_fin.obj");
+   std::string redfish(ManagerEnvironmentConfiguration::getLMM() + "models/redfish/fish.dae");
+   //std::string goldfish(ManagerEnvironmentConfiguration::getLMM() + "models/goldfish/goldfish.fbx");
 
-   //pressF->setPosition(0, 5, 5);
-
-   //WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "circle");
-   //box2->setPosition(Vector(0, 0, 50));
-   //worldLst->push_back(box2);
+   std::string fish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/common_fish/fish_texture.png");
+   std::string blue_fish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Blue_Fish/blue_fish_skin.jpg");
+   std::string long_fin_skin(ManagerEnvironmentConfiguration::getLMM() + "models/long_fin/long_fin_skin.jpg");
+   std::string redfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/redfish/fish.png");
+   std::string bigfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/bigfish/FishTex.jpg");
+   //std::string goldfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/goldfish/goldfishTex.png");
 
    //vendor = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
    //vendor->setPosition(0, 0, 10);
@@ -627,32 +401,6 @@ void Aftr::GLViewFishGame::loadMap()
 
    anchor = WOPxStatic::New(shinyRedPlasticCube, Vector(0, 0, 50), Vector(1, 0.5, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
    worldLst->push_back(anchor);
-
-   //anchor2 = WOPxStatic::New(shinyRedPlasticCube, Vector(40, 0, 30), Vector(0.5, 0.5, 1.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-   //worldLst->push_back(anchor2);
-
-   //sticks.resize(10);
-   //strings.resize(10);
-   //int offset = 4;
-   //for (int i = 0; i < sticks.size(); i++)
-   //{
-   //    sticks[i] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(1, 0.5, 0.5));
-   //    sticks[i]->setPosition(Vector(offset, 0, 50));
-   //    worldLst->push_back(sticks[i]);
-   //    offset += 4;
-   //}
-   //
-   //strings[0] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(0.5, 0.5, 1.5));
-   //strings[0]->setPosition(Vector(offset, 0, 45));
-   //worldLst->push_back(strings[0]);
-   //holder = strings[0];
-
-   //strings[1] = WOPxObj::New(shinyRedPlasticCube, physics, scene, Vector(0.5, 0.5, 1.5));
-   //strings[1]->setPosition(Vector(offset, 0, 37));
-   //worldLst->push_back(strings[1]);
-
-   int z_off = 8;
-
 
    {
        //pole
@@ -671,186 +419,109 @@ void Aftr::GLViewFishGame::loadMap()
        worldLst->push_back(wo);
    }
 
-   {
-       std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole_new.fbx");
-       std::string bait(ManagerEnvironmentConfiguration::getLMM() + "models/bait.fbx");
-       std::string line(ManagerEnvironmentConfiguration::getLMM() + "models/line.fbx");
-       std::string pole_end(ManagerEnvironmentConfiguration::getLMM() + "models/pole_end.fbx");
-       std::string pole_line1_base(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line1_base.fbx");
-       std::string pole_line1_cut(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line1_cut.fbx");
-       std::string pole_line2_base(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line2_base.fbx");
-       std::string pole_line2_cut(ManagerEnvironmentConfiguration::getLMM() + "models/pole_line2_cut.fbx");
-       std::string reel(ManagerEnvironmentConfiguration::getLMM() + "models/reel.fbx");
-
-       {
-           fishingPole = WOPxStatic::New(pole, Vector(0, 20.02, 6.99 + z_off), Vector(0.1, 0.1, 0.1), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-           fishingPole->upon_async_model_loaded([skin, this]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   fishingPole->getModel()->getSkins().push_back(std::move(spidey));
-                   fishingPole->getModel()->useNextSkin();
-               });
-           fishingPole->setPosition(Vector(0, 20.04, 6.99 + z_off));
-           worldLst->push_back(fishingPole);
-       }
-
-       //base 
-       {
-           lineBase = WOPxObj::New(pole_line1_base, physics, scene, Vector(0.1, 0.1, 0.1));
-           lineBase->upon_async_model_loaded([skin, this, z_off]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   lineBase->getModel()->getSkins().push_back(std::move(spidey));
-                   lineBase->getModel()->useNextSkin();
-
-               });
-           worldLst->push_back(lineBase);
-           lineBase->setPosition(Vector(0.02, 13.93, 7.55 + z_off));
-       }
-
-       lineCut.resize(11);
-       lineCut2.resize(11);
-
-       // base to cut
-       {
-           lineCut[0] = WOPxObj::New(pole_line1_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-           lineCut[0]->upon_async_model_loaded([skin, this]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   lineCut[0]->getModel()->getSkins().push_back(std::move(spidey));
-                   lineCut[0]->getModel()->useNextSkin();
-
-               });
-           lineCut[0]->setPosition(Vector(0.02, 13.55, 7.73 + z_off));
-           worldLst->push_back(lineCut[0]);
-       }
-       // cut length
-       {
-           float offset = -0.315;
-           for (int i = 1; i < 11; i++)
-           {
-               lineCut[i] = WOPxObj::New(pole_line1_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-               lineCut[i]->upon_async_model_loaded([skin, this, i]()
-                   {
-                       ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                       spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                       lineCut[i]->getModel()->getSkins().push_back(std::move(spidey));
-                       lineCut[i]->getModel()->useNextSkin();
-
-                   });
-               lineCut[i]->setPosition(Vector(0.02, 13.555 + offset, 7.73 + z_off));
-               worldLst->push_back(lineCut[i]);
-
-               offset -= 0.315;
-           }
-       }
-
-       // last cut to base 2
-       {    
-           lineBase2 = WOPxObj::New(pole_line2_base, physics, scene, Vector(0.1, 0.1, 0.1));
-           lineBase2->upon_async_model_loaded([skin, this]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   lineBase2->getModel()->getSkins().push_back(std::move(spidey));
-                   lineBase2->getModel()->useNextSkin();
-
-               });
-           lineBase2->setPosition(Vector(0.02, 10.03, 7.61 + z_off));
-           worldLst->push_back(lineBase2);
-       }
-
-
-       // base 2 to cut2
-       {
-           lineCut2[0] = WOPxObj::New(pole_line2_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-           lineCut2[0]->upon_async_model_loaded([skin, this]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   lineCut2[0]->getModel()->getSkins().push_back(std::move(spidey));
-                   lineCut2[0]->getModel()->useNextSkin();
-
-               });
-           lineCut2[0]->setPosition(Vector(0.02, 9.65, 7.745 + z_off));
-           worldLst->push_back(lineCut2[0]);
-       }
-
-       // cut2 length
-       {
-           float offset = -0.277;
-           for (int i = 1; i < 11; i++)
-           {
-               lineCut2[i] = WOPxObj::New(pole_line2_cut, physics, scene, Vector(0.1, 0.1, 0.1));
-               lineCut2[i]->upon_async_model_loaded([skin, this, i]()
-                   {
-                       ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                       spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                       lineCut2[i]->getModel()->getSkins().push_back(std::move(spidey));
-                       lineCut2[i]->getModel()->useNextSkin();
-
-                   });
-               lineCut2[i]->setPosition(Vector(0.02, 9.65 + offset, 7.746 + z_off));
-               worldLst->push_back(lineCut2[i]);
-
-               offset -= 0.277;
-           }
-       }
-
-       // last cut2 to pole end
-       {
-           poleEnd = WOPxObj::New(pole_end, physics, scene, Vector(0.1, 0.1, 0.1));
-           poleEnd->upon_async_model_loaded([skin, this] ()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   poleEnd->getModel()->getSkins().push_back(std::move(spidey));
-                   poleEnd->getModel()->useNextSkin();
-
-               });
-           poleEnd->setPosition(Vector(0.02, 6.512, 7.617 + z_off));
-           worldLst->push_back(poleEnd);
-       }
-
-       // line
-       {
-           fishString = WOPxObj::New(line, physics, scene, Vector(0.1, 0.1, 0.1));
-           fishString->upon_async_model_loaded([skin, this]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   fishString->getModel()->getSkins().push_back(std::move(spidey));
-                   fishString->getModel()->useNextSkin();
-
-               });
-           fishString->setPosition(Vector(0.02, 6.252, 3.27 + z_off));
-           worldLst->push_back(fishString);
-       }
-
-       // bait
-       {
-           fishBait = WOPxObj::New(bait, physics, scene, Vector(0.1, 0.1, 0.1));
-           fishBait->upon_async_model_loaded([skin, this]()
-               {
-                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-                   fishBait->getModel()->getSkins().push_back(std::move(spidey));
-                   fishBait->getModel()->useNextSkin();
-
-               });
-           fishBait->setPosition(Vector(-0.015, 6.252, 4.27));
-           worldLst->push_back(fishBait);
-       }
-
-   }
+   //{
+   //    //fish
+   //    WO* wo = WO::New(fish, Vector(1, 1, 1));
+   //    wo->upon_async_model_loaded([wo, fish_skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(fish_skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(cam->getPosition());
+   //    wo->rotateAboutRelX(-90 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //}
 
    //{
-   //    //bait
-   //    WO* wo = WO::New(bait, Vector(0.1, 0.1, 0.1));
-   //    wo->upon_async_model_loaded([wo, skin]()
+   //    // blue fish
+   //    WO* wo = WO::New(blue_fish, Vector(1, 1, 1));
+   //    wo->upon_async_model_loaded([wo, blue_fish_skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(blue_fish_skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 0, 10);
+   //    wo->rotateAboutRelX(180 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    // long fin
+   //    WO* wo = WO::New(long_fin, Vector(1.1, 1.1, 1.1));
+   //    wo->upon_async_model_loaded([wo, long_fin_skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(long_fin_skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 5, 10);
+   //    wo->rotateAboutRelY(90 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    // red
+   //    WO* wo = WO::New(redfish, Vector(1, 1, 1));
+   //    wo->upon_async_model_loaded([wo, redfish_skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(redfish_skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 10, 10);
+   //    wo->rotateAboutRelX(-90 * DEGtoRAD);
+   //    wo->rotateAboutRelZ(-90 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    // big
+   //    WO* wo = WO::New(bigfish, Vector(0.8, 0.8, 0.8));
+   //    wo->upon_async_model_loaded([wo, bigfish_skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(bigfish_skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 30, 10);
+   //    wo->rotateAboutRelX(-90 * DEGtoRAD);
+   //    wo->rotateAboutRelZ(-125 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    // goldFish
+   //    WO* wo = WO::New(goldfish, Vector(1, 1, 1));
+   //    wo->upon_async_model_loaded([wo, goldfish_skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(goldfish_skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(0, 25, 10);
+   //    //wo->rotateAboutRelZ(45 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //}
+
+   //{
+   //    // 120, 125, 6
+   //    //pole
+   //    WO* wo = WO::New(pole, Vector(0.07, 0.07, 0.07));
+   //    wo->upon_async_model_loaded([wo, skin, this]()
    //        {
    //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
    //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
@@ -858,29 +529,60 @@ void Aftr::GLViewFishGame::loadMap()
    //            wo->getModel()->getSkins().push_back(std::move(spidey));
    //            wo->getModel()->useNextSkin();
    //        });
-   //    wo->setPosition(0, 0, 20);
+   //    wo->setPosition(124, 128, 6);
+   //    wo->rotateAboutRelZ(144 * DEGtoRAD);
+   //    wo->rotateAboutRelX(25 * DEGtoRAD);
    //    worldLst->push_back(wo);
+   //    fishingRod[0] = wo;
    //}
 
    //{
+   //    // 120, 125, 6
+   //    //Reel
+   //    WO* wo = WO::New(reel, Vector(0.07, 0.07, 0.07));
+   //    wo->upon_async_model_loaded([wo, skin, this]()
+   //        {
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //            wo->getModel()->getSkins().push_back(std::move(spidey));
+   //            wo->getModel()->useNextSkin();
+   //        });
+   //    wo->setPosition(122.15, 125.77, 4.635);
+   //    wo->rotateAboutRelZ(144 * DEGtoRAD);
+   //    wo->rotateAboutRelX(25 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //    fishingRod[1] = wo;
+   //}
+
+   //{
+   //    // 120, 125, 6
    //    //line
-   //    WO* wo = WO::New(line, Vector(0.1, 0.1, 0.1));
-   //    wo->upon_async_model_loaded([wo, skin]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(0, 0, 20);
-   //    worldLst->push_back(wo);
+   //    for (int i = 0; i < 3; i++)
+   //    {
+   //        WO* wo = WO::New(line2, Vector(0.07, 0.07, 0.07));
+   //        wo->upon_async_model_loaded([wo, skin, this]()
+   //            {
+   //                rel_x = wo->getModel()->getBoundingBox().getlxlylz().z;
+   //                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //                //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //                wo->getModel()->getSkins().push_back(std::move(spidey));
+   //                wo->getModel()->useNextSkin();
+   //            });
+   //        wo->setPosition(127.78, 133.17, 6.57);
+   //        wo->rotateAboutRelZ(144 * DEGtoRAD);
+   //        //wo->rotateAboutRelX(55 *DEGtoRAD);
+   //        worldLst->push_back(wo);
+   //        fishingLines[i] = wo;
+   //    }
    //}
 
    //{
-   //    //reel
-   //    WO* wo = WO::New(reel, Vector(0.1, 0.1, 0.1));
-   //    wo->upon_async_model_loaded([wo, skin]()
+   //    // 120, 125, 6
+   //    //bait
+   //    WO* wo = WO::New(bait, Vector(0.07, 0.07, 0.07));
+   //    wo->upon_async_model_loaded([wo, skin, this]()
    //        {
    //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
    //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
@@ -888,10 +590,32 @@ void Aftr::GLViewFishGame::loadMap()
    //            wo->getModel()->getSkins().push_back(std::move(spidey));
    //            wo->getModel()->useNextSkin();
    //        });
-   //    wo->setPosition(0, 0, 20);
+   //    wo->setPosition(127.795, 133.145, 4.655);
+   //    wo->rotateAboutRelZ(144 * DEGtoRAD);
+   //    wo->rotateAboutRelZ(25 * DEGtoRAD);
    //    worldLst->push_back(wo);
+   //    fishingRod[2] = wo;
    //}
-   //
+
+   //{
+   //    // 120, 125, 6
+   //    //Hand
+   //    WO* wo = WO::New(hand, Vector(0.08, 0.08, 0.08));
+   //    //wo->upon_async_model_loaded([wo, skin, this]()
+   //    //    {
+   //    //        ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+   //    //        spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+   //    //        //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+   //    //        wo->getModel()->getSkins().push_back(std::move(spidey));
+   //    //        wo->getModel()->useNextSkin();
+   //    //    });
+   //    wo->setPosition(122.15, 125.77, 4.635);
+   //    wo->rotateAboutRelZ(240 * DEGtoRAD);
+   //    //wo->rotateAboutRelX(25 * DEGtoRAD);
+   //    worldLst->push_back(wo);
+   //    fishingRod[1] = wo;
+   //}
+
    //SkyBox Textures readily available
    std::vector< std::string > skyBoxImageNames; //vector to store texture paths
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_water+6.jpg" );
@@ -1054,32 +778,33 @@ void Aftr::GLViewFishGame::loadMap()
    //Make a Dear Im Gui instance via the WOImGui in the engine... This calls
    //the default Dear ImGui demo that shows all the features... To create your own,
 
-   //GuiText* yo = GuiText::New(nullptr);
-   WOImGui* gui = WOImGui::New(nullptr);
-   gui->setLabel( "My Gui" );
-   gui->subscribe_drawImGuiWidget(
-      [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
-      {
-           //WOImGui::draw_AftrImGui_Demo(gui);
-           ////yo->drawImGui_for_this_frame();
-           //if (ImGui::SliderFloat("Rel X Axis", &object_xyz[0], -50, 50)) {
-           //    fishBait->moveRelative(fishBait->getModel()->getRelXDir() * (object_xyz[0] - object_xyz_prev[0]));
-           //    object_xyz_prev[0] = object_xyz[0];
-           //}
+   GuiText* yo = GuiText::New(nullptr);
+   //WOImGui* gui = WOImGui::New(nullptr);
+   //gui->setLabel( "My Gui" );
+   //gui->subscribe_drawImGuiWidget(
+   //   [this, gui]() //this is a lambda, the capture clause is in [], the input argument list is in (), and the body is in {}
+   //   {
+   //        //WOImGui::draw_AftrImGui_Demo(gui);
+   //        ////yo->drawImGui_for_this_frame();
+   //        //if (ImGui::SliderFloat("Rel X Axis", &object_xyz[0], -50, 50)) {
+   //        //    fishBait->moveRelative(fishBait->getModel()->getRelXDir() * (object_xyz[0] - object_xyz_prev[0]));
+   //        //    object_xyz_prev[0] = object_xyz[0];
+   //        //}
 
-           //if (ImGui::SliderFloat("Rel Y Axis", &object_xyz[1], -180, 180)) {
-           //    fishBait->getModel()->moveRelative(fishBait->getModel()->getRelYDir() * (object_xyz[1] - object_xyz_prev[1]));
-           //    object_xyz_prev[1] = object_xyz[1];
-           //}
+   //        //if (ImGui::SliderFloat("Rel Y Axis", &object_xyz[1], -180, 180)) {
+   //        //    fishBait->getModel()->moveRelative(fishBait->getModel()->getRelYDir() * (object_xyz[1] - object_xyz_prev[1]));
+   //        //    object_xyz_prev[1] = object_xyz[1];
+   //        //}
 
-           //if (ImGui::SliderFloat("Rel Z Axis", &object_xyz[2], -50, 50)) {
-           //    fishBait->moveRelative(fishBait->getModel()->getRelZDir() * (object_xyz[2] - object_xyz_prev[2]));
-           //    object_xyz_prev[2] = object_xyz[2];
-           //}
-      
-      } );
-   this->worldLst->push_back( gui );
-   //this->worldLst->push_back(yo);
+   //        //if (ImGui::SliderFloat("Rel Z Axis", &object_xyz[2], -50, 50)) {
+   //        //    fishBait->moveRelative(fishBait->getModel()->getRelZDir() * (object_xyz[2] - object_xyz_prev[2]));
+   //        //    object_xyz_prev[2] = object_xyz[2];
+   //        //}
+   //   
+   //   } );
+   //this->worldLst->push_back( gui );
+   this->worldLst->push_back(yo);
+   fishtime->gui = yo;
    createFishGameWayPoints();
 }
 

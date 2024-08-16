@@ -3,6 +3,8 @@
 #include "CameraStandard.h"
 #include <algorithm>
 #include <random>
+#include "GuiText.h"
+#include "Fish.h"
 
 namespace Aftr
 {
@@ -34,6 +36,14 @@ namespace Aftr
 
 		void setGenerateFish(bool awesome) { generate_fish = awesome; }
 		void setFishBite(bool activate) { fish_bite = activate; }
+		void setBeginGame(bool yes) { begin = yes; }
+		void despawnRod();
+		void spawnRod();
+
+		void reelIn();
+		void reelOut();
+
+		GuiText* gui;
 
 	protected:
 		float wheelButtonVelocityScalar;
@@ -47,10 +57,18 @@ namespace Aftr
 		float catch_score;
 		float catch_goal;
 		float pole_health;
+		float reelSpeed;
 
+		bool begin;
 		bool fish_bite;
+		bool fish_play;
 		bool fish_struggle;
 		std::vector<int> fish_struggle_times;
+
+		std::vector<WO*> fishingRod;
+		std::vector<WO*> fishingLines;
+
+		std::vector<Fish*> fishes;
 
 		bool generate_fish;
 		bool start_time;
@@ -58,6 +76,9 @@ namespace Aftr
 		bool change_direction;
 
 		int index;
+		int reel_index;
+
+		float reelCheck;
 
 		std::chrono::steady_clock::time_point start_timer;
 		std::chrono::steady_clock::time_point end_timer;

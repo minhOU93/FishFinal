@@ -7,6 +7,11 @@
 #include "SDL.h"
 #include <cstdlib> 
 
+#include "AftrManagers.h"
+#include "WO.h"
+#include "GLView.h"
+#include "WorldContainer.h"
+
 #include <chrono>
 #include <thread>
 
@@ -22,6 +27,46 @@ bool compare_float(float x, float y, float epsilon = 0.01f) {
     return false; //they are not same
 }
 
+
+int generateRandomNumber(int min, int max) {
+    // Initialize a random device and a random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // Define the range for the random number
+    std::uniform_int_distribution<> distr(min, max);
+
+    // Generate and return the random number
+    return distr(gen);
+}
+
+void CameraFishing::despawnRod()
+{
+    for (int i = 0; i < fishingLines.size(); i++)
+    {
+        fishingLines[i]->isVisible = false;
+    }
+
+    for (int i = 0; i < fishingRod.size(); i++)
+    {
+        fishingRod[i]->isVisible = false;
+    }
+}
+
+
+void CameraFishing::spawnRod()
+{
+    for (int i = 0; i < fishingLines.size(); i++)
+    {
+        fishingLines[i]->isVisible = true;
+    }
+
+    for (int i = 0; i < fishingRod.size(); i++)
+    {
+        fishingRod[i]->isVisible = true;
+    }
+}
+
 CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : IFace(this), Camera(glView, mouseHandler)
 {
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -34,8 +79,9 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
     this->rel_x = 0;
     this->rel_y = 0;
 
+    this->begin = false;
     this->catch_score = 0.0f;
-    this->catch_goal = 1.0f;
+    this->catch_goal = 12.5f;
     this->pole_health = 100.0f;
 
     this->fish_bite = false;
@@ -44,6 +90,150 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
     this->start_time = true;
     this->index = 0;
     this->change_direction = false;
+    this->reel_index = 0;
+
+    this->reelCheck = 0;
+    this->reelSpeed = 0.03f;
+
+    fishingLines.resize(4);
+    fishingRod.resize(3);
+    fishes.resize(4);
+
+    // Rod Initialize
+    {
+        std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole.fbx");
+        std::string bait(ManagerEnvironmentConfiguration::getLMM() + "models/bait.fbx");
+        std::string reel(ManagerEnvironmentConfiguration::getLMM() + "models/reel.fbx");
+        std::string line(ManagerEnvironmentConfiguration::getLMM() + "models/line.fbx");
+        std::string line2(ManagerEnvironmentConfiguration::getLMM() + "models/line2.fbx");
+
+        std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
+
+        {
+            // 120, 125, 6
+            //pole
+            WO* wo = WO::New(pole, Vector(0.07, 0.07, 0.07));
+            wo->upon_async_model_loaded([wo, skin, this]()
+                {
+                    ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+                    spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+                    //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+                    wo->getModel()->getSkins().push_back(std::move(spidey));
+                    wo->getModel()->useNextSkin();
+                });
+            wo->setPosition(124, 128, 6);
+            wo->rotateAboutRelZ(144 * DEGtoRAD);
+            wo->rotateAboutRelX(25 * DEGtoRAD);
+            ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
+            fishingRod[0] = wo;
+        }
+
+        {
+            // 120, 125, 6
+            //Reel
+            WO* wo = WO::New(reel, Vector(0.07, 0.07, 0.07));
+            wo->upon_async_model_loaded([wo, skin, this]()
+                {
+                    ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+                    spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+                    //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+                    wo->getModel()->getSkins().push_back(std::move(spidey));
+                    wo->getModel()->useNextSkin();
+                });
+            wo->setPosition(122.15, 125.77, 4.635);
+            wo->rotateAboutRelZ(144 * DEGtoRAD);
+            wo->rotateAboutRelX(25 * DEGtoRAD);
+            ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
+            fishingRod[1] = wo;
+        }
+
+        {
+            // 120, 125, 6
+            //line
+            for (int i = 0; i < fishingLines.size(); i++)
+            {
+                WO* wo = WO::New(line2, Vector(0.07, 0.07, 0.07));
+                wo->upon_async_model_loaded([wo, skin, this]()
+                    {
+                        rel_x = wo->getModel()->getBoundingBox().getlxlylz().z;
+                        ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+                        spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+                        //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+                        wo->getModel()->getSkins().push_back(std::move(spidey));
+                        wo->getModel()->useNextSkin();
+                    });
+                wo->setPosition(127.78, 133.17, 6.57);
+                wo->rotateAboutRelZ(144 * DEGtoRAD);
+                //wo->rotateAboutRelX(55 *DEGtoRAD);
+                ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
+                fishingLines[i] = wo;
+            }
+        }
+
+        {
+            // 120, 125, 6
+            //bait
+            WO* wo = WO::New(bait, Vector(0.07, 0.07, 0.07));
+            wo->upon_async_model_loaded([wo, skin, this]()
+                {
+                    ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+                    spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+                    //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+                    wo->getModel()->getSkins().push_back(std::move(spidey));
+                    wo->getModel()->useNextSkin();
+                });
+            wo->setPosition(127.795, 133.145, 4.655);
+            wo->rotateAboutRelZ(144 * DEGtoRAD);
+            wo->rotateAboutRelZ(25 * DEGtoRAD);
+            ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
+            fishingRod[2] = wo;
+        }
+    }
+
+    // Fish initialize;
+    {
+        std::string blue_fish_path(ManagerEnvironmentConfiguration::getLMM() + "models/Blue_Fish/blue_fish.obj");
+        std::string fish_path(ManagerEnvironmentConfiguration::getLMM() + "models/common_fish/fish.obj");
+        //std::string bigfish(ManagerEnvironmentConfiguration::getLMM() + "models/bigfish/Fish.fbx");
+        std::string long_fin_path(ManagerEnvironmentConfiguration::getLMM() + "models/long_fin/long_fin.obj");
+        std::string redfish_path(ManagerEnvironmentConfiguration::getLMM() + "models/redfish/fish.dae");
+
+        std::string fish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/common_fish/fish_texture.png");
+        std::string blue_fish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Blue_Fish/blue_fish_skin.jpg");
+        std::string long_fin_skin(ManagerEnvironmentConfiguration::getLMM() + "models/long_fin/long_fin_skin.jpg");
+        std::string redfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/redfish/fish.png");
+        //std::string bigfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/bigfish/FishTex.jpg");
+        Vector baitPosition(127.795, 133.145, 4.655);
+
+        Fish* blue_fish = Fish::New(blue_fish_path, blue_fish_skin);
+        //blue_fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
+        blue_fish->rotateAboutRelX(180 * DEGtoRAD);
+        ManagerGLView::getGLView()->getWorldContainer()->push_back(blue_fish);
+        fishes[0] = blue_fish;
+
+        Fish* fish = Fish::New(fish_path, fish_skin);
+        //fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
+        fish->rotateAboutRelX(-90 * DEGtoRAD);
+        ManagerGLView::getGLView()->getWorldContainer()->push_back(fish);
+        fishes[1] = fish;
+
+        Fish* long_fin = Fish::New(long_fin_path, long_fin_skin);
+        //long_fin->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
+        long_fin->rotateAboutRelY(90 * DEGtoRAD);
+        long_fin->rotateAboutRelX(125 * DEGtoRAD);
+        ManagerGLView::getGLView()->getWorldContainer()->push_back(long_fin);
+        fishes[2] = long_fin;
+
+        Fish* red_fish = Fish::New(redfish_path, redfish_skin);
+        //red_fish->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
+        red_fish->rotateAboutRelX(-90 * DEGtoRAD);
+        red_fish->rotateAboutRelZ(-90 * DEGtoRAD);
+        ManagerGLView::getGLView()->getWorldContainer()->push_back(red_fish);
+        fishes[3] = red_fish;
+        
+
+
+    }
 }
 
 CameraFishing::~CameraFishing()
@@ -85,6 +275,12 @@ void CameraFishing::shakeCamera()
 
 void CameraFishing::update()
 {
+    if (begin)
+    {
+        reelOut();
+
+        gui->catchGoal = catch_goal;
+    }
 
     if (fish_bite)
     {
@@ -117,7 +313,7 @@ void CameraFishing::update()
         if (!fish_struggle && this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
         {
 
-            catch_score += 1.0f;
+            catch_score += 0.1f;
             std::cout << "CATCH SCORE: " << catch_score << std::endl;
 
         }
@@ -126,6 +322,8 @@ void CameraFishing::update()
             pole_health -= 0.5f;
 
             std::cout << "HEALTH SCORE: " << pole_health << std::endl;
+            if(pole_health >= 0.0f)
+                gui->setHealth(float(pole_health / 100));
         }
 
         if (catch_score == 1000)
@@ -139,8 +337,95 @@ void CameraFishing::update()
 
     }
 
+    if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton() && catch_score < catch_goal)
+    {
+        fishingRod[1]->getModel()->rotateAboutRelX(3 * DEGtoRAD);
+        if (catch_score >= 6.5)
+        {
+            reelIn();
+            reelSpeed = 0.01;
+        }
+        catch_score += 0.02f;
+        gui->setCatchProgress(catch_score);
+    }
+
+    if (this->mouseHandler->isMouseDownRightButton())
+    {
+        pole_health -= 0.5f;
+
+        //std::cout << "HEALTH SCORE: " << pole_health << std::endl;
+        gui->setHealth(float(pole_health / 100));
+    }
+
+    if (catch_score >= catch_goal)
+    {
+        reelIn();
+    }
+
 }
 
+void CameraFishing::reelIn()
+{
+    if (reelCheck >= 3.5)
+    {
+        fishingLines[3]->moveRelative(Vector(0, 0, reelSpeed));
+
+        fishingRod[2]->moveRelative(Vector(0, 0, reelSpeed));
+    }
+    else if (reelCheck >= 1.5)
+    {
+        fishingLines[2]->moveRelative(Vector(0, 0, reelSpeed));
+        fishingLines[3]->moveRelative(Vector(0, 0, reelSpeed));
+
+        fishingRod[2]->moveRelative(Vector(0, 0, reelSpeed));
+    }
+    else if (reelCheck >= 0)
+    {
+        fishingLines[1]->moveRelative(Vector(0, 0, reelSpeed));
+        fishingLines[2]->moveRelative(Vector(0, 0, reelSpeed));
+        fishingLines[3]->moveRelative(Vector(0, 0, reelSpeed));
+
+        fishingRod[2]->moveRelative(Vector(0, 0, reelSpeed));
+    }
+
+    reelCheck -= reelSpeed;
+    std::cout << reelCheck << std::endl;
+}
+
+void CameraFishing::reelOut()
+{
+    if (reelCheck <= 1.5)
+    {
+        fishingLines[1]->moveRelative(Vector(0, 0, -reelSpeed));
+        fishingLines[2]->moveRelative(Vector(0, 0, -reelSpeed));
+        fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
+
+        fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
+        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+    }
+    else if (reelCheck <= 3.5)
+    {
+        fishingLines[2]->moveRelative(Vector(0, 0, -reelSpeed));
+        fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
+
+        fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
+        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+    }
+    else if (reelCheck <= 5.5)
+    {
+        fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
+
+        fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
+        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+    }
+    else
+    {
+        begin = false;
+    }
+
+    reelCheck += reelSpeed;
+    std::cout << reelCheck << std::endl;
+}
 
 
 void CameraFishing::onMouseDown(const SDL_MouseButtonEvent& e)
@@ -210,7 +495,7 @@ void CameraFishing::onMouseMove(const SDL_MouseMotionEvent& e)
     //    rel_y = 0;
     //}
 
-    if(!fish_struggle) this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
+    //if(!fish_struggle) this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
 }
 
 void CameraFishing::setCameraVelocityMultiplier(float camVelMultiplier)

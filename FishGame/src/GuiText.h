@@ -23,8 +23,22 @@ public:
 		//textBox("HIII!!!!!!!");
 
 		//sellMenu();
+
+		fishCatchProgress(catchProgress, catchGoal);
+
+		healthBar(health, 15);
 	}
 
+	void getHealthColors(float& r, float& g)
+	{
+		if (health >= 50)
+		{
+			r = 0.5f - health * 0.5;
+		}
+	}
+
+	void setHealth(float hp) { health = hp; }
+	void setCatchProgress(float progress) { catchProgress = progress; }
 
 	void textBox(std::string text)
 	{
@@ -32,7 +46,8 @@ public:
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
 
-		offset_y = 50;
+		int offset_y = 50;
+		int offset_x = 0;
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.45f));
 		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
@@ -50,8 +65,8 @@ public:
 		getCenterPosition();
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
 
-		offset_y = -150;
-		offset_x = -300;
+		int offset_y = -150;
+		int offset_x = -300;
 		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		ImGui::Begin("Sell Fish Here", nullptr, window_flags);
 
@@ -70,7 +85,44 @@ public:
 
 	void fishCatchProgress(float current, float total)
 	{
+		getCenterPosition();
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
+		int offset_x = -225;
+		int offset_y = -25;
+		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.45f));
+		ImGui::Begin("slider", nullptr, window_flags);
 
+		ImGui::VSliderFloat("##int", ImVec2(18, 160), &current, 0, total, "");
+		//ImGui::Text("Catch Progress");
+		ImGui::PopStyleColor();
+
+		ImGui::End();
+	}
+
+	void healthBar(float current, float total)
+	{
+		getCenterPosition();
+		if (health >= 0.5f)
+		{
+			float t = (health - 0.5f) / 0.5f;
+			ImGui::GetStyle().Colors[ImGuiCol_PlotHistogram] = ImVec4(1.0f * (1.0f - t), 1.0f, 0.0f, 1.0f);
+		}
+		else
+		{
+			float t = health / 0.5f;
+			ImGui::GetStyle().Colors[ImGuiCol_PlotHistogram] = ImVec4(1.0f, (t), 0.0f, 1.0f);
+		}
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoNavInputs;
+		int offset_x = -400 * x_scale;
+		int offset_y = -325 * y_scale;
+		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+		ImGui::Begin("healthbar", nullptr, window_flags);
+
+		ImGui::Text("Line Health");
+		ImGui::ProgressBar(current, ImVec2(450.0f, total), "");
+
+		ImGui::End();
 	}
 
 	void getCenterPosition()
@@ -78,10 +130,19 @@ public:
 		int height = ManagerWindowing::getWindowHeight();
 		int width = ManagerWindowing::getWindowWidth();
 
+		if (prev_height != height)
+			y_scale = height / prev_height;
+
+		if (prev_width != width)
+			x_scale = width / prev_width;
+
 		SDL_GetWindowPosition(ManagerWindowing::getCurrentWindow(), window_pos_x, window_pos_y);
 
 		*x = width * 0.5f + (*window_pos_x);
 		*y = height * 0.5f + (*window_pos_y);
+		
+		prev_height = height;
+		prev_width = width;
 
 	}
 
@@ -134,6 +195,7 @@ public:
 		return ret;
 	}
 
+	float catchGoal;
 
 protected:
 	GuiText(WOGUI* parentWOGUI) : WOImGuiAbstract::WOImGuiAbstract(parentWOGUI), Aftr::IFace(this)
@@ -148,9 +210,6 @@ protected:
 		window_pos_x = new int;
 		window_pos_y = new int;
 
-
-		offset_y = 0;
-		offset_x = 0;
 		my_image_width = 0;
 		my_image_height = 0;
 
@@ -158,6 +217,14 @@ protected:
 		bool ret = LoadTextureFromFile(bait.c_str(), &carp_image, &my_image_width, &my_image_height);
 		auto pic = load_image_from_file(bait);
 		IM_ASSERT(ret);
+
+		prev_height = ManagerWindowing::getWindowHeight();
+		prev_width = ManagerWindowing::getWindowWidth();
+
+		health = 1.0f;
+		catchProgress = 0;
+
+		catchGoal = 1.0f;
 	}
 
 	int* x;
@@ -166,11 +233,21 @@ protected:
 	int* window_pos_x;
 	int* window_pos_y;
 
-	int offset_y;
-	int offset_x;
+	float prev_height;
+	float prev_width;
 
 	int my_image_width;
 	int my_image_height;
+
+	float x_scale = 1;
+	float y_scale = 1;
+
+	float hello;
+
+	float health;
+	float catchProgress;
+
+	//ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
 
 	GLuint carp_image = 0;
 

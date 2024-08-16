@@ -57,9 +57,6 @@ public:
    physx::PxD6Joint* joint = nullptr;
    physx::PxSphericalJoint* Stringjoint = nullptr;
 
-   std::vector<WOPxObj*> sticks;
-   std::vector<WOPxObj*> strings;
-
    Vector rayOutput;
 
    AftrGeometricTerm occulude;
@@ -83,18 +80,10 @@ public:
 
    //////////////////////////////////////////////////
 
-   WOPxStatic* fishingPole = nullptr;
-   std::vector<WOPxObj*> lineCut;
-   std::vector<WOPxObj*> lineCut2;
+   std::vector<WO*> fishingRod;
+   std::vector<WO*> fishingLines;
 
-   WOPxObj* lineBase;
-   WOPxObj* lineBase2;
-
-   WOPxObj* poleEnd;
-   WOPxObj* fishString;
-   WOPxObj* fishBait;
-
-   WOPxKinematic* tester;
+   float rel_x;
 
 protected:
    GLViewFishGame( const std::vector< std::string >& args );

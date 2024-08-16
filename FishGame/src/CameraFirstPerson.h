@@ -30,6 +30,8 @@ namespace Aftr
 
 		void trackRod();
 		void setRod(WO* rod) { fishingRod = rod; }
+		void despawnRod();
+		void spawnRod();
 
 	protected:
 		float wheelButtonVelocityScalar;

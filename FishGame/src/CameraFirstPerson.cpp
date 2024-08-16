@@ -10,6 +10,16 @@
 
 using namespace Aftr;
 
+void CameraFirstPerson::despawnRod()
+{
+    if (fishingRod != nullptr) fishingRod->isVisible = false;
+}
+
+void CameraFirstPerson::spawnRod()
+{
+    if (fishingRod != nullptr) fishingRod->isVisible = true;
+}
+
 CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHandler) : IFace(this), Camera(glView, mouseHandler)
 {
     SDL_SetRelativeMouseMode(SDL_TRUE);
