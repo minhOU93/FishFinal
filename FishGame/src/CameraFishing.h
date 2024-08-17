@@ -5,6 +5,8 @@
 #include <random>
 #include "GuiText.h"
 #include "Fish.h"
+#include <cstdlib> 
+#include <limits>
 
 namespace Aftr
 {
@@ -30,6 +32,10 @@ namespace Aftr
 		virtual void moveLeft(); ///< Pans camera to the 'left' (along camera's local +y axis)
 		virtual void moveRight(); ///< Pans camera to the 'right' (along camera's local -y axis)
 		virtual void setCameraVelocityMultiplier(float camVelMultiplier); ///< Multiplier must be greater than zero
+		
+		
+		void victoryScreen();
+		void returnFromVictory();
 
 		void fillVectorWithRandomValues(std::vector<int>& vec, int minValue, int maxValue);
 		void shakeCamera();
@@ -39,11 +45,22 @@ namespace Aftr
 		void setBeginGame(bool yes) { begin = yes; }
 		void despawnRod();
 		void spawnRod();
+		void resetGame();
+		bool normalizeCamera();
 
 		void reelIn();
 		void reelOut();
 
 		GuiText* gui;
+
+		int generateRandomNumber(int min, int max);
+
+		bool failGame;
+		bool startGame;
+		bool showVictory;
+		bool returnVictory;
+		bool allowExit;
+		Mat4 saveFishPose;
 
 	protected:
 		float wheelButtonVelocityScalar;
@@ -53,6 +70,7 @@ namespace Aftr
 
 		int rel_x;
 		int rel_y;
+		int angleVictory;
 
 		float catch_score;
 		float catch_goal;
@@ -64,6 +82,7 @@ namespace Aftr
 		bool fish_play;
 		bool fish_struggle;
 		std::vector<int> fish_struggle_times;
+		int fishStruggleTime;
 
 		std::vector<WO*> fishingRod;
 		std::vector<WO*> fishingLines;
@@ -74,11 +93,26 @@ namespace Aftr
 		bool start_time;
 		bool end_time;
 		bool change_direction;
+		bool reelOutStatus;
+		bool startWait;
+
+		bool endGame;
+		WO* baitPointer;
 
 		int index;
 		int reel_index;
 
 		float reelCheck;
+
+		int waitTime;
+		int fishIndex;
+
+		float camLookX;
+		float camLookY;
+		float camLookZ;
+
+		std::random_device rd;
+		std::mt19937 gen;
 
 		std::chrono::steady_clock::time_point start_timer;
 		std::chrono::steady_clock::time_point end_timer;

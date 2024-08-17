@@ -24,17 +24,9 @@ public:
 
 		//sellMenu();
 
-		fishCatchProgress(catchProgress, catchGoal);
+		if(showProgress) fishCatchProgress(catchProgress, catchGoal);
 
-		healthBar(health, 15);
-	}
-
-	void getHealthColors(float& r, float& g)
-	{
-		if (health >= 50)
-		{
-			r = 0.5f - health * 0.5;
-		}
+		if(showHealth) healthBar(health, 15);
 	}
 
 	void setHealth(float hp) { health = hp; }
@@ -196,6 +188,10 @@ public:
 	}
 
 	float catchGoal;
+	bool showHealth;
+	bool showProgress;
+
+	bool showVictoryText;
 
 protected:
 	GuiText(WOGUI* parentWOGUI) : WOImGuiAbstract::WOImGuiAbstract(parentWOGUI), Aftr::IFace(this)
@@ -225,10 +221,15 @@ protected:
 		catchProgress = 0;
 
 		catchGoal = 1.0f;
+		showHealth = false;
+		showProgress = false;
+		timer = 0;
 	}
 
 	int* x;
 	int* y;
+
+	int timer;
 
 	int* window_pos_x;
 	int* window_pos_y;

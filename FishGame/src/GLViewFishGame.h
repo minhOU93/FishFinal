@@ -44,6 +44,7 @@ public:
    virtual void onKeyUp( const SDL_KeyboardEvent& key );
    void createFishingRod();
    const Uint8* keystates = SDL_GetKeyboardState(NULL);
+    
 
    WO* vendor = nullptr;
 

@@ -3,9 +3,8 @@
 #include "CameraFirstPerson.h"
 #include "HandlerMouseState.h"
 #include "Model.h"
-#include <limits>
+
 #include "SDL.h"
-#include <cstdlib> 
 
 #include "AftrManagers.h"
 #include "WO.h"
@@ -28,7 +27,7 @@ bool compare_float(float x, float y, float epsilon = 0.01f) {
 }
 
 
-int generateRandomNumber(int min, int max) {
+int CameraFishing::generateRandomNumber(int min, int max) {
     // Initialize a random device and a random number generator
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -78,22 +77,34 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
     this->wheelScrollCounter = 1;
     this->rel_x = 0;
     this->rel_y = 0;
+    this->angleVictory = 0;
 
     this->begin = false;
     this->catch_score = 0.0f;
-    this->catch_goal = 12.5f;
+    this->catch_goal = 3.4f;
     this->pole_health = 100.0f;
+    this->reelOutStatus = false;
+    this->allowExit = true;
 
     this->fish_bite = false;
-    this->fish_struggle = false;;
+    this->fish_struggle = false;
+    this->showVictory = false;
 
-    this->start_time = true;
+    this->start_time = false;
     this->index = 0;
     this->change_direction = false;
     this->reel_index = 0;
 
+    this->endGame = false;
+    this->startGame = false;
+    this->startWait = false;
+
     this->reelCheck = 0;
     this->reelSpeed = 0.03f;
+    this->fishIndex = 0;
+    this->failGame = false;
+
+    this->waitTime = 0;
 
     fishingLines.resize(4);
     fishingRod.resize(3);
@@ -187,8 +198,11 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
             wo->rotateAboutRelZ(25 * DEGtoRAD);
             ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
             fishingRod[2] = wo;
+            baitPointer = wo;
         }
     }
+
+    this->returnVictory = false;
 
     // Fish initialize;
     {
@@ -206,30 +220,43 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         Vector baitPosition(127.795, 133.145, 4.655);
 
         Fish* blue_fish = Fish::New(blue_fish_path, blue_fish_skin);
-        //blue_fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
+        blue_fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
         blue_fish->rotateAboutRelX(180 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(blue_fish);
         fishes[0] = blue_fish;
+        blue_fish->struggleRange.first = 3;
+        blue_fish->struggleRange.second = 5;
 
         Fish* fish = Fish::New(fish_path, fish_skin);
-        //fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
+        fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
         fish->rotateAboutRelX(-90 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(fish);
         fishes[1] = fish;
+        fish->struggleRange.first = 4;
+        fish->struggleRange.second = 6;
 
         Fish* long_fin = Fish::New(long_fin_path, long_fin_skin);
-        //long_fin->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
+        long_fin->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
         long_fin->rotateAboutRelY(90 * DEGtoRAD);
         long_fin->rotateAboutRelX(125 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(long_fin);
         fishes[2] = long_fin;
+        long_fin->struggleRange.first = 5;
+        long_fin->struggleRange.second = 6;
 
         Fish* red_fish = Fish::New(redfish_path, redfish_skin);
-        //red_fish->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
+        red_fish->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
         red_fish->rotateAboutRelX(-90 * DEGtoRAD);
         red_fish->rotateAboutRelZ(-90 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(red_fish);
         fishes[3] = red_fish;
+        red_fish->struggleRange.first = 2;
+        red_fish->struggleRange.second = 4;
+
+        for (int i = 0; i < fishes.size(); i++)
+        {
+            fishes[i]->isVisible = false;
+        }
         
 
 
@@ -264,25 +291,164 @@ void CameraFishing::shakeCamera()
     else
     {
         if (this->getLookDirection().x >= 0.41f)
-            this->changeLookAtViaMouse(-15, 0);
+            this->changeLookAtViaMouse(-5, 0);
         else
             change_direction = false;
     }
 
-    this->changeLookAtViaMouse(5, 0);
+    //this->changeLookAtViaMouse(5, 0);
 
+}
+
+bool CameraFishing::normalizeCamera()
+{
+    if (compare_float(this->getLookDirection().x, 0.646266))
+    {
+        return true;
+    }
+    else if (this->getLookDirection().x > 0.646266)
+    {
+        this->changeLookAtViaMouse(-5, 0);
+    }
+    else
+        this->changeLookAtViaMouse(5, 0);
+
+    return false;
+}
+
+void CameraFishing::resetGame()
+{
+    startGame = false;
+    begin = false;
+    reelOutStatus = false;
+    startWait = false;
+    fish_bite = false;
+    reelCheck = 0.0f;
+    endGame = false;
+
+    gui->showHealth = false;
+    gui->showProgress = false;
+
+    Vector baitPosition(127.795, 133.145, 4.655);
+
+    for (int i = 0; i < fishingLines.size(); i++)
+    {
+        fishingLines[i]->setPosition(127.78, 133.17, 6.57);
+    }
+
+    fishingRod[2]->setPosition(baitPosition);
+
+    if (fishIndex == 0)
+    {
+        fishes[fishIndex]->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
+        fishes[fishIndex]->isVisible = false;
+    }
+    else if (fishIndex == 1)
+    {
+        fishes[fishIndex]->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
+        fishes[fishIndex]->isVisible = false;
+    }
+    else if (fishIndex == 2)
+    {
+        fishes[fishIndex]->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
+        fishes[fishIndex]->isVisible = false;
+    }
+    else
+    {
+        fishes[fishIndex]->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
+        fishes[fishIndex]->isVisible = false;
+
+    }
+    pole_health = 100.0f;
+    catch_score = 0;
+}
+
+void CameraFishing::victoryScreen()
+{
+    if (angleVictory != 90)
+    {
+        this->rotateAboutRelY(-3 * DEGtoRAD);
+        angleVictory += 3;
+        fishes[fishIndex]->isVisible = false;
+        fishes[fishIndex]->rotateToIdentity();
+    }
+    else
+    {
+        fishes[fishIndex]->isVisible = true;
+        fishes[fishIndex]->setPosition(this->getCameraLookAtPoint() + (this->getLookDirection() * 8));
+        //fishes[fishIndex]->rotateAboutRelZ(1 * DEGtoRAD);
+        //fishes[fishIndex]->rotateAboutRelX(1 * DEGtoRAD);
+        fishes[fishIndex]->rotateAboutRelY(1 * DEGtoRAD);
+
+    }
+}
+
+void CameraFishing::returnFromVictory()
+{
+    if (angleVictory != 0)
+    {
+        angleVictory -= 3;
+        this->rotateAboutRelY(3 * DEGtoRAD);
+    }
+    else
+    {
+        fishes[fishIndex]->isVisible = false;
+        fishes[fishIndex]->setPose(saveFishPose);
+        returnVictory = false;
+        begin = true;
+        allowExit = true;
+    }
 }
 
 void CameraFishing::update()
 {
+    // begining sequence: generate data -> reelOut Animation -> wait until bite;
     if (begin)
     {
-        reelOut();
+        //this->setCameraLookDirection(Vector(0.646266f, 0.713154f, this->getLookDirection().z));
+        fishes[fishIndex]->isVisible = false;
+        waitTime = generateRandomNumber(3, 8);
+        fishIndex = generateRandomNumber(0, 3);
+
+        reelOutStatus = true;
+
+        std::cout << "HELLO \n" << fishIndex << std::endl;
 
         gui->catchGoal = catch_goal;
+        begin = false;
+    }
+    else if (reelOutStatus)
+    {
+        reelOut();
+        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+        std::cout << "HELLO \n" << fishIndex << std::endl;
+    }
+    else if (startWait && waitTime == std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count())
+    {
+        fish_bite = true;
+        fishes[fishIndex]->isVisible = true;
+        startWait = false;
     }
 
+
+    // Main game sequence: bite -> startGame -> Endgame or Line breaks
     if (fish_bite)
+    {
+        gui->showHealth = true;
+        pole_health -= 0.1f;
+        //gui->setHealth(float(pole_health / 100));
+        fishingRod[1]->getModel()->rotateAboutRelX(-10 * DEGtoRAD);
+        if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
+        {
+            startGame = true;
+            fish_bite = false;
+            start_time = true;
+            fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
+            gui->showProgress = true;
+            allowExit = false;
+        }
+    }
+    else if (startGame)
     {
         if (fish_struggle)
         {
@@ -294,7 +460,7 @@ void CameraFishing::update()
             start_timer = std::chrono::high_resolution_clock::now();
             start_time = false;
         }
-        else if (!fish_struggle && std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count() == fish_struggle_times[index])
+        else if (!fish_struggle && std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count() == fishStruggleTime)
         {
             fish_struggle = true;
             start_time = true;
@@ -304,63 +470,74 @@ void CameraFishing::update()
         {
             fish_struggle = false;
             start_time = true;
-            index++;
-            if (index > 4) { index = 0; }
-
-            //this->setCameraLookDirection(Vector(0.6271f, 0.692003f, -0.263519f));
+            fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
         }
 
         if (!fish_struggle && this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
         {
 
-            catch_score += 0.1f;
-            std::cout << "CATCH SCORE: " << catch_score << std::endl;
+            fishingRod[1]->getModel()->rotateAboutRelX(3 * DEGtoRAD);
+            if (catch_score >= catch_goal * 0.65)
+            {
+                reelIn();
+                reelSpeed = 0.01;
+            }
+            catch_score += 0.02f;
+            //gui->setCatchProgress(catch_score);
 
         }
-        else if(fish_struggle && this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
+        else if (fish_struggle && this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
         {
             pole_health -= 0.5f;
 
             std::cout << "HEALTH SCORE: " << pole_health << std::endl;
-            if(pole_health >= 0.0f)
-                gui->setHealth(float(pole_health / 100));
+            //if (pole_health >= 0.0f)
+            //    gui->setHealth(float(pole_health / 100));
         }
 
-        if (catch_score == 1000)
+        if (catch_score >= catch_goal)
         {
-            fish_bite = false;
+            fish_struggle = false;
+            fishStruggleTime = 1000;
             pole_health = 100.0f;
-            start_time = true;
+            start_time = false;
+            startGame = false;
+            endGame = true;
+            catch_score = 0;
+
+            gui->showHealth = false;
+            gui->showProgress = false;
         }
 
-        end_timer = std::chrono::high_resolution_clock::now();
-
-    }
-
-    if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton() && catch_score < catch_goal)
-    {
-        fishingRod[1]->getModel()->rotateAboutRelX(3 * DEGtoRAD);
-        if (catch_score >= 6.5)
+        if (pole_health <= 0.0f)
         {
-            reelIn();
-            reelSpeed = 0.01;
+
+            failGame = true;
+            resetGame();
+
         }
-        catch_score += 0.02f;
-        gui->setCatchProgress(catch_score);
     }
-
-    if (this->mouseHandler->isMouseDownRightButton())
+    else if (endGame)
     {
-        pole_health -= 0.5f;
+        normalizeCamera();
 
-        //std::cout << "HEALTH SCORE: " << pole_health << std::endl;
-        gui->setHealth(float(pole_health / 100));
-    }
-
-    if (catch_score >= catch_goal)
-    {
+        reelSpeed = 0.04;
         reelIn();
     }
+
+    if (showVictory)
+    {
+        victoryScreen();
+    }
+    else if (returnVictory)
+    {
+        returnFromVictory();
+    }
+
+    gui->setHealth(float(pole_health / 100));
+    gui->setCatchProgress(catch_score);
+    end_timer = std::chrono::high_resolution_clock::now();
+    std::cout << this->getLookDirection().x << " " << this->getLookDirection().y << " " << this->getLookDirection().z << std::endl;
 
 }
 
@@ -371,6 +548,7 @@ void CameraFishing::reelIn()
         fishingLines[3]->moveRelative(Vector(0, 0, reelSpeed));
 
         fishingRod[2]->moveRelative(Vector(0, 0, reelSpeed));
+        fishes[fishIndex]->moveRelative(Vector(0, 0, reelSpeed));
     }
     else if (reelCheck >= 1.5)
     {
@@ -378,6 +556,7 @@ void CameraFishing::reelIn()
         fishingLines[3]->moveRelative(Vector(0, 0, reelSpeed));
 
         fishingRod[2]->moveRelative(Vector(0, 0, reelSpeed));
+        fishes[fishIndex]->moveRelative(Vector(0, 0, reelSpeed));
     }
     else if (reelCheck >= 0)
     {
@@ -386,6 +565,14 @@ void CameraFishing::reelIn()
         fishingLines[3]->moveRelative(Vector(0, 0, reelSpeed));
 
         fishingRod[2]->moveRelative(Vector(0, 0, reelSpeed));
+        fishes[fishIndex]->moveRelative(Vector(0, 0, reelSpeed));
+    }
+    else
+    {
+        endGame = false;
+        saveFishPose = fishes[fishIndex]->getPose();
+        sleep_for(milliseconds(650));
+        showVictory = true;
     }
 
     reelCheck -= reelSpeed;
@@ -402,6 +589,7 @@ void CameraFishing::reelOut()
 
         fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
         fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+        fishes[fishIndex]->moveRelative(Vector(0, 0, -reelSpeed));
     }
     else if (reelCheck <= 3.5)
     {
@@ -410,6 +598,7 @@ void CameraFishing::reelOut()
 
         fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
         fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+        fishes[fishIndex]->moveRelative(Vector(0, 0, -reelSpeed));
     }
     else if (reelCheck <= 5.5)
     {
@@ -417,14 +606,17 @@ void CameraFishing::reelOut()
 
         fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
         fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+        fishes[fishIndex]->moveRelative(Vector(0, 0, -reelSpeed));
     }
     else
     {
-        begin = false;
+        reelOutStatus = false;
+        startWait = true;
+        start_timer = std::chrono::high_resolution_clock::now();
     }
 
     reelCheck += reelSpeed;
-    std::cout << reelCheck << std::endl;
+    std::cout << fishIndex << std::endl;
 }
 
 

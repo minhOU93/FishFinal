@@ -53,6 +53,8 @@ GLViewFishGame* GLViewFishGame::New( const std::vector< std::string >& args )
 }
 
 
+
+
 GLViewFishGame::GLViewFishGame( const std::vector< std::string >& args ) : GLView( args )
 {
    //Initialize any member variables that need to be used inside of LoadMap() here.
@@ -116,6 +118,23 @@ void GLViewFishGame::updateWorld()
    {
        fishtime->spawnRod();
        firstPerson->despawnRod();
+
+       if (fishtime->failGame == true)
+       {
+           fishtime->failGame = false;
+           Vector camLookDir = this->cam->getLookDirection();
+           Vector camNormalDir = this->cam->getNormalDirection();
+           Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+           HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+           this->cam = firstPerson;
+           this->cam->setMouseHandler(camMouseHandler);
+
+           this->cam->setPosition(camPos);
+           this->cam->setCameraNormalDirection(camNormalDir);
+           this->cam->setCameraLookDirection(camLookDir);
+           this->cam->startCameraBehavior();
+       }
    }
    else
    {
@@ -192,118 +211,170 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 {
    GLView::onKeyDown( key );
 
-   if (key.keysym.sym == SDLK_0)
+   if (cam == firstPerson)
    {
-   }
-
-   if (key.keysym.sym == SDLK_9)
-   {
-       pos += 0.5f;
-       anchor2->setPosition(Vector(37, 0, pos));
-   }
-
-   if( key.keysym.sym == SDLK_1 )
-   {
-       //std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
-
-       //Vector camStuff = this->cam->getCameraLookAtPoint() + (this->cam->getLookDirection() * 5);
-
-       //int distance = this->cam->getPosition().distanceFrom(vendor->getPosition());
-
-       ////WO* wo = WO::New(shinyRedPlasticCube);
-       ////wo->setPosition(camStuff);
-       ////worldLst->push_back(wo);
-       //occulude = blocker->getNearestPointWhereLineIntersectsMe(camStuff, vendor->getPosition(), rayOutput);
-
-       //std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
-       //std::cout << "Distance between Vendor and Cam: " << distance << std::endl;
-       //if (occulude == AftrGeometricTerm::geoSUCCESS)
-       //{
-       //    std::cout << "POINT FOUND" << std::endl;
-       //}
-       //else
-       //{
-       //    std::cout << "NO POINT FOUND" << std::endl;
-       //}
-
-
-   }
-   if (key.keysym.sym == SDLK_2)
-   {   
-       std::cout << rel_x << std::endl;
-       fishingLines[1]->moveRelative(Vector(0, 0, -rel_x * 0.1));
-       fishingLines[2]->moveRelative(Vector(0, 0, -rel_x * 0.1));
-       fishingRod[2]->moveRelative(Vector(0, 0, -rel_x * 0.1));
-
-       fishingRod[1]->getModel()->rotateAboutRelX(-5 * DEGtoRAD);
-
-   }
-   if (key.keysym.sym == SDLK_3)
-   {
-
-       for (int i = 0; i < fishingLines.size(); i++)
+       if (key.keysym.sym == SDLK_f)
        {
-           fishingLines[i]->getModel()->rotateAboutRelY(2 * DEGtoRAD);
+            std::cout << "FISH ACTIVATE" << std::endl;
+
+            Vector camLookDir = this->cam->getLookDirection();
+            Vector camNormalDir = this->cam->getNormalDirection();
+            Vector camPos = this->cam->getPosition();
+            HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+            this->cam = fishtime;
+            this->cam->setMouseHandler(camMouseHandler);
+
+            this->cam->setPosition(camPos);
+            this->cam->setCameraNormalDirection(camNormalDir);
+            this->cam->setCameraLookDirection(camLookDir);
+            this->cam->startCameraBehavior();
+
+            cam->rotateToIdentity();
+            cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
+            cam->setPosition(Vector(120, 125, 6));
+
+            fishtime->setBeginGame(true);
        }
-       for (int i = 0; i < fishingRod.size(); i++)
+   }
+   else if (cam == fishtime)
+   {
+       if (fishtime->allowExit == true && fishtime->showVictory == false && key.keysym.sym == SDLK_f)
        {
-           fishingRod[i]->getModel()->rotateAboutRelZ(2 * DEGtoRAD);
+            fishtime->resetGame();
+            Vector camLookDir = this->cam->getLookDirection();
+            Vector camNormalDir = this->cam->getNormalDirection();
+            Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+            HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+            this->cam = firstPerson;
+            this->cam->setMouseHandler(camMouseHandler);
+
+            this->cam->setPosition(camPos);
+            this->cam->setCameraNormalDirection(camNormalDir);
+            this->cam->setCameraLookDirection(camLookDir);
+            this->cam->startCameraBehavior();
        }
-
-   }
-   if (key.keysym.sym == SDLK_SPACE)
-   {
-
-   }
-
-   if (key.keysym.sym == SDLK_4)
-   {
-       std::cout << "FISH ACTIVATE" << std::endl;
-
-       Vector camLookDir = this->cam->getLookDirection();
-       Vector camNormalDir = this->cam->getNormalDirection();
-       Vector camPos = this->cam->getPosition();
-       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
-
-       this->cam = fishtime;
-       this->cam->setMouseHandler(camMouseHandler);
-
-       this->cam->setPosition(camPos);
-       this->cam->setCameraNormalDirection(camNormalDir);
-       this->cam->setCameraLookDirection(camLookDir);
-       this->cam->startCameraBehavior();
-       this->cam->setLabel("FishCamera");
-
-       cam->rotateToIdentity();
-       cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
-       cam->setPosition(Vector(120, 125, 6));
+       else if (fishtime->showVictory == true && key.keysym.sym == SDLK_f)
+       {
+           fishtime->returnVictory = true;
+           fishtime->showVictory = false;
+           std::cout << "HELLO??" << std::endl;
+       }
    }
 
-   if (key.keysym.sym == SDLK_5)
-   {
-       Vector camLookDir = this->cam->getLookDirection();
-       Vector camNormalDir = this->cam->getNormalDirection();
-       Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
-       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+   //if (key.keysym.sym == SDLK_0)
+   //{
+   //}
 
-       this->cam = firstPerson;
-       this->cam->setMouseHandler(camMouseHandler);
+   //if (key.keysym.sym == SDLK_9)
+   //{
+   //    pos += 0.5f;
+   //    anchor2->setPosition(Vector(37, 0, pos));
+   //}
 
-       this->cam->setPosition(camPos);
-       this->cam->setCameraNormalDirection(camNormalDir);
-       this->cam->setCameraLookDirection(camLookDir);
-       this->cam->startCameraBehavior();
+   //if( key.keysym.sym == SDLK_1 )
+   //{
+   //    //std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+
+   //    //Vector camStuff = this->cam->getCameraLookAtPoint() + (this->cam->getLookDirection() * 5);
+
+   //    //int distance = this->cam->getPosition().distanceFrom(vendor->getPosition());
+
+   //    ////WO* wo = WO::New(shinyRedPlasticCube);
+   //    ////wo->setPosition(camStuff);
+   //    ////worldLst->push_back(wo);
+   //    //occulude = blocker->getNearestPointWhereLineIntersectsMe(camStuff, vendor->getPosition(), rayOutput);
+
+   //    //std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
+   //    //std::cout << "Distance between Vendor and Cam: " << distance << std::endl;
+   //    //if (occulude == AftrGeometricTerm::geoSUCCESS)
+   //    //{
+   //    //    std::cout << "POINT FOUND" << std::endl;
+   //    //}
+   //    //else
+   //    //{
+   //    //    std::cout << "NO POINT FOUND" << std::endl;
+   //    //}
 
 
-       
+   //}
+   //if (key.keysym.sym == SDLK_2)
+   //{   
+   //    std::cout << rel_x << std::endl;
+   //    fishingLines[1]->moveRelative(Vector(0, 0, -rel_x * 0.1));
+   //    fishingLines[2]->moveRelative(Vector(0, 0, -rel_x * 0.1));
+   //    fishingRod[2]->moveRelative(Vector(0, 0, -rel_x * 0.1));
 
-       //this->setActorChaseType(STANDARDEZNAV);
-   }
+   //    fishingRod[1]->getModel()->rotateAboutRelX(-5 * DEGtoRAD);
 
-   if (key.keysym.sym == SDLK_6)
-   {
-       fishtime->setBeginGame(true);
-   }
+   //}
+   //if (key.keysym.sym == SDLK_3)
+   //{
+
+   //    for (int i = 0; i < fishingLines.size(); i++)
+   //    {
+   //        fishingLines[i]->getModel()->rotateAboutRelY(2 * DEGtoRAD);
+   //    }
+   //    for (int i = 0; i < fishingRod.size(); i++)
+   //    {
+   //        fishingRod[i]->getModel()->rotateAboutRelZ(2 * DEGtoRAD);
+   //    }
+
+   //}
+   //if (key.keysym.sym == SDLK_SPACE)
+   //{
+
+   //}
+
+   //if (key.keysym.sym == SDLK_4)
+   //{
+   //    std::cout << "FISH ACTIVATE" << std::endl;
+
+   //    Vector camLookDir = this->cam->getLookDirection();
+   //    Vector camNormalDir = this->cam->getNormalDirection();
+   //    Vector camPos = this->cam->getPosition();
+   //    HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+   //    this->cam = fishtime;
+   //    this->cam->setMouseHandler(camMouseHandler);
+
+   //    this->cam->setPosition(camPos);
+   //    this->cam->setCameraNormalDirection(camNormalDir);
+   //    this->cam->setCameraLookDirection(camLookDir);
+   //    this->cam->startCameraBehavior();
+   //    this->cam->setLabel("FishCamera");
+
+   //    cam->rotateToIdentity();
+   //    cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
+   //    cam->setPosition(Vector(120, 125, 6));
+   //}
+
+   //if (key.keysym.sym == SDLK_5)
+   //{
+   //    Vector camLookDir = this->cam->getLookDirection();
+   //    Vector camNormalDir = this->cam->getNormalDirection();
+   //    Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+   //    HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+   //    this->cam = firstPerson;
+   //    this->cam->setMouseHandler(camMouseHandler);
+
+   //    this->cam->setPosition(camPos);
+   //    this->cam->setCameraNormalDirection(camNormalDir);
+   //    this->cam->setCameraLookDirection(camLookDir);
+   //    this->cam->startCameraBehavior();
+
+
+   //    
+
+   //    //this->setActorChaseType(STANDARDEZNAV);
+   //}
+
+   //if (key.keysym.sym == SDLK_6)
+   //{
+   //    fishtime->setBeginGame(true);
+   //}
 
 
 }
