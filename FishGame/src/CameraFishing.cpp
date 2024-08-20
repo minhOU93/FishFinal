@@ -110,6 +110,9 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
     fishingRod.resize(3);
     fishes.resize(4);
 
+    Vector displacement(1707.334229, 1710.420288, -63.118397);
+    Vector old(120, 125, 6);
+
     // Rod Initialize
     {
         std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole.fbx");
@@ -132,7 +135,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
                     wo->getModel()->getSkins().push_back(std::move(spidey));
                     wo->getModel()->useNextSkin();
                 });
-            wo->setPosition(124, 128, 6);
+            wo->setPosition(Vector(124, 128, 6) - old + displacement);
             wo->rotateAboutRelZ(144 * DEGtoRAD);
             wo->rotateAboutRelX(25 * DEGtoRAD);
             ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
@@ -151,7 +154,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
                     wo->getModel()->getSkins().push_back(std::move(spidey));
                     wo->getModel()->useNextSkin();
                 });
-            wo->setPosition(122.15, 125.77, 4.635);
+            wo->setPosition(Vector(122.15, 125.77, 4.635) - old + displacement);
             wo->rotateAboutRelZ(144 * DEGtoRAD);
             wo->rotateAboutRelX(25 * DEGtoRAD);
             ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
@@ -173,7 +176,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
                         wo->getModel()->getSkins().push_back(std::move(spidey));
                         wo->getModel()->useNextSkin();
                     });
-                wo->setPosition(127.78, 133.17, 6.57);
+                wo->setPosition(Vector(127.78, 133.17, 6.57) - old + displacement);
                 wo->rotateAboutRelZ(144 * DEGtoRAD);
                 //wo->rotateAboutRelX(55 *DEGtoRAD);
                 ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
@@ -193,7 +196,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
                     wo->getModel()->getSkins().push_back(std::move(spidey));
                     wo->getModel()->useNextSkin();
                 });
-            wo->setPosition(127.795, 133.145, 4.655);
+            wo->setPosition(Vector(127.795, 133.145, 4.655) - old + displacement);
             wo->rotateAboutRelZ(144 * DEGtoRAD);
             wo->rotateAboutRelZ(25 * DEGtoRAD);
             ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
@@ -217,7 +220,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         std::string long_fin_skin(ManagerEnvironmentConfiguration::getLMM() + "models/long_fin/long_fin_skin.jpg");
         std::string redfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/redfish/fish.png");
         //std::string bigfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/bigfish/FishTex.jpg");
-        Vector baitPosition(127.795, 133.145, 4.655);
+        Vector baitPosition(Vector(127.795, 133.145, 4.655) - old + displacement);
 
         Fish* blue_fish = Fish::New(blue_fish_path, blue_fish_skin);
         blue_fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
@@ -226,6 +229,8 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         fishes[0] = blue_fish;
         blue_fish->struggleRange.first = 3;
         blue_fish->struggleRange.second = 5;
+        blue_fish->name = "Blue Fish";
+        blue_fish->price = 16;
 
         Fish* fish = Fish::New(fish_path, fish_skin);
         fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
@@ -234,6 +239,8 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         fishes[1] = fish;
         fish->struggleRange.first = 4;
         fish->struggleRange.second = 6;
+        fish->name = "Common Fish";
+        fish->price = 6;
 
         Fish* long_fin = Fish::New(long_fin_path, long_fin_skin);
         long_fin->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
@@ -243,6 +250,8 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         fishes[2] = long_fin;
         long_fin->struggleRange.first = 5;
         long_fin->struggleRange.second = 6;
+        long_fin->name = "Long Fin";
+        long_fin->price = 3;
 
         Fish* red_fish = Fish::New(redfish_path, redfish_skin);
         red_fish->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
@@ -252,6 +261,8 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         fishes[3] = red_fish;
         red_fish->struggleRange.first = 2;
         red_fish->struggleRange.second = 4;
+        red_fish->name = "Red Fish";
+        red_fish->price = 12;
 
         for (int i = 0; i < fishes.size(); i++)
         {
@@ -329,11 +340,15 @@ void CameraFishing::resetGame()
     gui->showHealth = false;
     gui->showProgress = false;
 
-    Vector baitPosition(127.795, 133.145, 4.655);
+    Vector displacement(1707.334229, 1710.420288, -63.118397);
+    Vector old(120, 125, 6);
+
+    Vector baitPosition(Vector(127.795, 133.145, 4.655) - old + displacement);
+
 
     for (int i = 0; i < fishingLines.size(); i++)
     {
-        fishingLines[i]->setPosition(127.78, 133.17, 6.57);
+        fishingLines[i]->setPosition(Vector(127.78, 133.17, 6.57) - old + displacement);
     }
 
     fishingRod[2]->setPosition(baitPosition);
@@ -412,8 +427,6 @@ void CameraFishing::update()
 
         reelOutStatus = true;
 
-        std::cout << "HELLO \n" << fishIndex << std::endl;
-
         gui->catchGoal = catch_goal;
         begin = false;
     }
@@ -421,7 +434,6 @@ void CameraFishing::update()
     {
         reelOut();
         fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
-        std::cout << "HELLO \n" << fishIndex << std::endl;
     }
     else if (startWait && waitTime == std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count())
     {
@@ -507,6 +519,8 @@ void CameraFishing::update()
 
             gui->showHealth = false;
             gui->showProgress = false;
+
+            player->inventory[fishes[fishIndex]->getName()]++;
         }
 
         if (pole_health <= 0.0f)
@@ -537,7 +551,6 @@ void CameraFishing::update()
     gui->setHealth(float(pole_health / 100));
     gui->setCatchProgress(catch_score);
     end_timer = std::chrono::high_resolution_clock::now();
-    std::cout << this->getLookDirection().x << " " << this->getLookDirection().y << " " << this->getLookDirection().z << std::endl;
 
 }
 
@@ -576,7 +589,6 @@ void CameraFishing::reelIn()
     }
 
     reelCheck -= reelSpeed;
-    std::cout << reelCheck << std::endl;
 }
 
 void CameraFishing::reelOut()
@@ -616,7 +628,6 @@ void CameraFishing::reelOut()
     }
 
     reelCheck += reelSpeed;
-    std::cout << fishIndex << std::endl;
 }
 
 

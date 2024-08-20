@@ -58,9 +58,11 @@ public:
 		return physx::PxTransform(m);
 	}
 
-	void createActor(physx::PxPhysics* p, physx::PxArticulationReducedCoordinate* a, physx::PxMat44 pose, physx::PxArticulationLink* parent = nullptr) {
+	void createActor(physx::PxPhysics* p, physx::PxScene* s, physx::PxControllerManager* c, Aftr::Vector pos)
+	{
 		return;
 	}
+
 protected:
 	WOPxStatic() : WOPhysX(), Aftr::IFace(this)
 	{

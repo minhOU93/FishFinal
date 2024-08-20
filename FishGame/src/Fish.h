@@ -35,6 +35,8 @@ public:
         return fish;
     }
 
+    std::string getName() { return name; }
+    int getPrice() { return price; }
 
     std::pair<int, int> struggleRange;
     int price;

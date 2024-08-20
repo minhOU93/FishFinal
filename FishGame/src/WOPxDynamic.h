@@ -43,10 +43,11 @@ public:
 	void set_shape_type(std::string input) {
 		shape_type = input;
 	}
-
-	void createActor(physx::PxPhysics* p, physx::PxArticulationReducedCoordinate* a, physx::PxMat44 pose, physx::PxArticulationLink* parent = nullptr) {
+	void createActor(physx::PxPhysics* p, physx::PxScene* s, physx::PxControllerManager* c, Aftr::Vector pos)
+	{
 		return;
 	}
+
 
 protected:
 	WOPxDynamic() : WOPhysX(), Aftr::IFace(this)

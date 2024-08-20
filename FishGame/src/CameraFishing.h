@@ -7,6 +7,7 @@
 #include "Fish.h"
 #include <cstdlib> 
 #include <limits>
+#include "CameraFirstPerson.h"
 
 namespace Aftr
 {
@@ -61,6 +62,8 @@ namespace Aftr
 		bool returnVictory;
 		bool allowExit;
 		Mat4 saveFishPose;
+
+		CameraFirstPerson* player;
 
 	protected:
 		float wheelButtonVelocityScalar;

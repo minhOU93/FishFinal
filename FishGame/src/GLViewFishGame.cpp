@@ -90,8 +90,6 @@ void GLViewFishGame::onCreate()
    Vector camNormalDir = this->cam->getNormalDirection();
    Vector camPos = this->cam->getPosition();
 
-   firstPerson = new CameraFirstPerson(this, this->cam->getMouseHandler());
-
    this->cam = firstPerson;
 
    this->cam->setPosition(camPos);
@@ -139,7 +137,12 @@ void GLViewFishGame::updateWorld()
    else
    {
        fishtime->despawnRod();
-       firstPerson->spawnRod();
+       if(this->cam == firstPerson) firstPerson->spawnRod();
+   }
+
+   if (firstTest != nullptr && firstTest->controller != nullptr)
+   {
+       if (collisionFlags != PxControllerCollisionFlag::eCOLLISION_DOWN) collisionFlags = firstTest->controller->move(PxVec3(0, 0, -0.1), 0.01, 1 / 60, yo);
    }
 
    scene->simulate(1.0 / 60.0);
@@ -179,6 +182,9 @@ void GLViewFishGame::updateWorld()
            //}
        }
    }
+
+   if(wo1->isDone)
+        firstPerson->doneTerrain = wo1->isDone;
 }
 
 void GLViewFishGame::onResizeWindow( GLsizei width, GLsizei height )
@@ -232,7 +238,7 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
             cam->rotateToIdentity();
             cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
-            cam->setPosition(Vector(120, 125, 6));
+            cam->setPosition(Vector(1707.334229, 1710.420288, -63.118397));
 
             fishtime->setBeginGame(true);
        }
@@ -244,7 +250,7 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
             fishtime->resetGame();
             Vector camLookDir = this->cam->getLookDirection();
             Vector camNormalDir = this->cam->getNormalDirection();
-            Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+            Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 7);
             HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
 
             this->cam = firstPerson;
@@ -273,32 +279,25 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
    //    anchor2->setPosition(Vector(37, 0, pos));
    //}
 
-   //if( key.keysym.sym == SDLK_1 )
-   //{
-   //    //std::string shinyRedPlasticCube(ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl");
+   if( key.keysym.sym == SDLK_1 )
+   {
 
-   //    //Vector camStuff = this->cam->getCameraLookAtPoint() + (this->cam->getLookDirection() * 5);
+       //std::map<std::string, int>::iterator it = firstPerson->inventory.begin();
 
-   //    //int distance = this->cam->getPosition().distanceFrom(vendor->getPosition());
+       //// Iterate through the map and print the elements
+       //while (it != firstPerson->inventory.end()) {
+       //    std::cout << it->first << ": " << it->second << std::endl;
+       //    ++it;
+       //}
 
-   //    ////WO* wo = WO::New(shinyRedPlasticCube);
-   //    ////wo->setPosition(camStuff);
-   //    ////worldLst->push_back(wo);
-   //    //occulude = blocker->getNearestPointWhereLineIntersectsMe(camStuff, vendor->getPosition(), rayOutput);
+       std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
+       WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "circle");
 
-   //    //std::cout << "(" << rayOutput.x << ", " << rayOutput.y << ", " << rayOutput.z << ")" << std::endl;
-   //    //std::cout << "Distance between Vendor and Cam: " << distance << std::endl;
-   //    //if (occulude == AftrGeometricTerm::geoSUCCESS)
-   //    //{
-   //    //    std::cout << "POINT FOUND" << std::endl;
-   //    //}
-   //    //else
-   //    //{
-   //    //    std::cout << "NO POINT FOUND" << std::endl;
-   //    //}
+       box2->setPosition(Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z + 10));
+       this->worldLst->push_back(box2);
 
 
-   //}
+   }
    //if (key.keysym.sym == SDLK_2)
    //{   
    //    std::cout << rel_x << std::endl;
@@ -327,54 +326,33 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
    //}
 
-   //if (key.keysym.sym == SDLK_4)
-   //{
-   //    std::cout << "FISH ACTIVATE" << std::endl;
+   if (key.keysym.sym == SDLK_4)
+   {
+       if (wo1->isDone)
+       {
+           std::cout << "ASYNC DONE" << std::endl;
+       }
+       else
+       {
+           std::cout << "NOT DONE" << std::endl;
+       }
+   }
 
-   //    Vector camLookDir = this->cam->getLookDirection();
-   //    Vector camNormalDir = this->cam->getNormalDirection();
-   //    Vector camPos = this->cam->getPosition();
-   //    HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+   if (key.keysym.sym == SDLK_5)
+   {
+       firstPerson->actor->controller->setPosition(PxExtendedVec3(1414, 2054, 9));
+       //firstTest->setPosition(Vector(1414, 2054, -59));
+        //hello->moveRelative(Vector(1, 0, 0));
+   }
 
-   //    this->cam = fishtime;
-   //    this->cam->setMouseHandler(camMouseHandler);
+   if (key.keysym.sym == SDLK_6)
+   {
+        
+       std::cout << firstTest->controller->getActor()->getGlobalPose().p.x << " , " << firstTest->controller->getActor()->getGlobalPose().p.y << " , " << firstTest->controller->getActor()->getGlobalPose().p.z << std::endl;
 
-   //    this->cam->setPosition(camPos);
-   //    this->cam->setCameraNormalDirection(camNormalDir);
-   //    this->cam->setCameraLookDirection(camLookDir);
-   //    this->cam->startCameraBehavior();
-   //    this->cam->setLabel("FishCamera");
-
-   //    cam->rotateToIdentity();
-   //    cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
-   //    cam->setPosition(Vector(120, 125, 6));
-   //}
-
-   //if (key.keysym.sym == SDLK_5)
-   //{
-   //    Vector camLookDir = this->cam->getLookDirection();
-   //    Vector camNormalDir = this->cam->getNormalDirection();
-   //    Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
-   //    HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
-
-   //    this->cam = firstPerson;
-   //    this->cam->setMouseHandler(camMouseHandler);
-
-   //    this->cam->setPosition(camPos);
-   //    this->cam->setCameraNormalDirection(camNormalDir);
-   //    this->cam->setCameraLookDirection(camLookDir);
-   //    this->cam->startCameraBehavior();
+   }
 
 
-   //    
-
-   //    //this->setActorChaseType(STANDARDEZNAV);
-   //}
-
-   //if (key.keysym.sym == SDLK_6)
-   //{
-   //    fishtime->setBeginGame(true);
-   //}
 
 
 }
@@ -392,20 +370,24 @@ void Aftr::GLViewFishGame::loadMap()
    this->actorLst = new WorldList();
    this->netLst = new WorldList();
 
-   ManagerOpenGLState::GL_CLIPPING_PLANE = 1000.0;
+   ManagerOpenGLState::GL_CLIPPING_PLANE = 1500.0;
    ManagerOpenGLState::GL_NEAR_PLANE = 0.1f;
    ManagerOpenGLState::enableFrustumCulling = false;
    Axes::isVisible = true;
    this->glRenderer->isUsingShadowMapping( false ); //set to TRUE to enable shadow mapping, must be using GL 3.2+
 
-   this->cam->setPosition( 5,17, 7 );
+   //this->cam->setPosition( 1414, 2054, -59 );
+   this->cam->setPosition(0, 0, 5);
    this->cam->rotateAboutRelZ(-180 * DEGtoRAD);
 
    fishingRod.resize(3);
    fishingLines.resize(3);
 
-   fishtime = new CameraFishing(this, this->cam->getMouseHandler());
+   firstPerson = new CameraFirstPerson(this, this->cam->getMouseHandler());
 
+   fishtime = new CameraFishing(this, this->cam->getMouseHandler());
+   fishtime->player = firstPerson;
+   //PxControllerManager* controllerManager = PxCreateControllerManager(*scene);
    {
        this->foundation = PxCreateFoundation(PX_PHYSICS_VERSION, a, e);
        this->physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, physx::PxTolerancesScale());
@@ -420,15 +402,13 @@ void Aftr::GLViewFishGame::loadMap()
        this->scene->setFlag(physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS, true);
    }
 
-   //scene->setGravity(physx::PxVec3(0, 0, -2.81f));
-   articulation = physics->createArticulationReducedCoordinate();
+   scene->setGravity(physx::PxVec3(0, 0, -9.81f));
+   //articulation = physics->createArticulationReducedCoordinate();
 
-   WOCameraSink* hello;
-
-   PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
-   PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0, 0, 1, 0), *gMaterial);//good for the grass
-   groundPlane->setGlobalPose(PxTransform(PxVec3(0, 0, -1000)));
-   scene->addActor(*groundPlane);
+   //PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
+   //PxRigidStatic* groundPlane = PxCreatePlane(*physics, PxPlane(0, 0, 1, 0), *gMaterial);//good for the grass
+   ////groundPlane->setGlobalPose(PxTransform(PxVec3(0, 0, -1000)));
+   //scene->addActor(*groundPlane);
 
    std::string shinyRedPlasticCube( ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl" );
    std::string wheeledCar( ManagerEnvironmentConfiguration::getSMM() + "/models/rcx_treads.wrl" );
@@ -461,6 +441,16 @@ void Aftr::GLViewFishGame::loadMap()
    std::string bigfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/bigfish/FishTex.jpg");
    //std::string goldfish_skin(ManagerEnvironmentConfiguration::getLMM() + "models/goldfish/goldfishTex.png");
 
+
+   //std::string terrain(ManagerEnvironmentConfiguration::getLMM() + "models/Terrain/Snow.obj");
+   //std::string terrain_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Terrain/SM_DiffJPG.jpg");
+
+   std::string terrain(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Snow.obj");
+   std::string terrain_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Normals.png");
+
+   //std::string terrain(ManagerEnvironmentConfiguration::getLMM() + "models/SnowTerrain/SnowTerrain.3ds");
+   //std::string terrain_skin(ManagerEnvironmentConfiguration::getLMM() + "models/SnowTerrain/686.jpg");
+
    //vendor = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
    //vendor->setPosition(0, 0, 10);
    //worldLst->push_back(vendor);
@@ -470,12 +460,39 @@ void Aftr::GLViewFishGame::loadMap()
    ////blocker->isVisible = false;
    //worldLst->push_back(blocker);
 
-   anchor = WOPxStatic::New(shinyRedPlasticCube, Vector(0, 0, 50), Vector(1, 0.5, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-   worldLst->push_back(anchor);
+   {
+       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(10, 0, 0.5), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
+       worldLst->push_back(yes);
+   }
+
+   {
+       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(12, 0, 0.9), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
+       worldLst->push_back(yes);
+   }
+
+   {
+       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(14, 0, 1.1), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
+       worldLst->push_back(yes);
+   }
+
+   {
+       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(14, 0, 1.9), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
+       worldLst->push_back(yes);
+   }
+   controllerManager = PxCreateControllerManager(*scene);
+    
+   firstTest = WOPxController::New(shinyRedPlasticCube, physics, scene, controllerManager, Vector(1414, 2054, 0));
+   worldLst->push_back(firstTest);
+   firstTest->isVisible = false;
+   firstPerson->actor = firstTest;
+
+   //hello = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
+   //hello->setPosition(0, 0, 5);
+   //worldLst->push_back(hello);
 
    {
        //pole
-       WO* wo = WO::New(pole, Vector(0.1, 0.1, 0.1));
+       WO* wo = WO::New(pole, Vector(0.01, 0.01, 0.01));
        wo->upon_async_model_loaded([wo, skin, this]()
            {
                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
@@ -490,201 +507,130 @@ void Aftr::GLViewFishGame::loadMap()
        worldLst->push_back(wo);
    }
 
-   //{
-   //    //fish
-   //    WO* wo = WO::New(fish, Vector(1, 1, 1));
-   //    wo->upon_async_model_loaded([wo, fish_skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(fish_skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(cam->getPosition());
-   //    wo->rotateAboutRelX(-90 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //}
+   {
+       //psudeo player
+
+       //std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
+       //WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "sphere");
+
+       //hello = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
+
+       //box2->setPose(this->cam->getPose());
+       //hello->setPose(this->cam->getPose());
+       ////box2->setPosition(Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z));
+
+       //worldLst->push_back(box2);
+       //worldLst->push_back(hello);
+       //box2->isVisible = false;
+       //hello->isVisible = false;
+
+       //firstPerson->actor = box2;
+       //firstPerson->actorMover = hello;
+   }
+
+   {
+        std::string terrain_data2(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Heightmap3.png"); //Mountain_Range.png alien4.png Ridge_NEW.png
+        std::string world_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Normals.png");
+
+        float top = 34.2072593790098f * 4.5;
+        float bottom = 33.9980272592999f * 4.5;
+
+        float left = 118.65234375f * 4.5;
+        float right = 118.443603515625 * 4.5;
+
+        float vert = top - bottom;
+        float horz = right - left;
+
+        VectorD offset(((top + bottom) / 2), (left + right) / 2, 0);
+
+        VectorD scale = VectorD(0.05f, 0.05f, 0.05f);
+        VectorD upperLeft(top, left, 0);
+        VectorD lowerRight(bottom, right, 0);
+
+        std::string nothing = "";
+
+        wo1 = Terrain::New(terrain_data2, world_skin, physics, scene, upperLeft, lowerRight, 0, scale, offset);
+        this->worldLst->push_back((WOGridECEFElevation*)wo1);
+    }
 
    //{
-   //    // blue fish
-   //    WO* wo = WO::New(blue_fish, Vector(1, 1, 1));
-   //    wo->upon_async_model_loaded([wo, blue_fish_skin, this]()
+   //    //mountain
+   //    WO* wo = WO::New(terrain, Vector(100, 100, 100));
+   //    //wo->rotateAboutRelX(-90 * DEGtoRAD);
+   //    wo->setPosition(0, 0, 180);
+   //    wo->upon_async_model_loaded([wo, terrain_skin, this]()
    //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(blue_fish_skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(0, 0, 10);
-   //    wo->rotateAboutRelX(180 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //}
 
-   //{
-   //    // long fin
-   //    WO* wo = WO::New(long_fin, Vector(1.1, 1.1, 1.1));
-   //    wo->upon_async_model_loaded([wo, long_fin_skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(long_fin_skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(0, 5, 10);
-   //    wo->rotateAboutRelY(90 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //}
+   //            float* vertexListCopy = nullptr;
+   //            unsigned int* indicesCopy = nullptr;
+   //            physx::PxRigidActor* a = nullptr;
 
-   //{
-   //    // red
-   //    WO* wo = WO::New(redfish, Vector(1, 1, 1));
-   //    wo->upon_async_model_loaded([wo, redfish_skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(redfish_skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(0, 10, 10);
-   //    wo->rotateAboutRelX(-90 * DEGtoRAD);
-   //    wo->rotateAboutRelZ(-90 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //}
+   //            size_t vertexListSize = wo->getModel()->getModelDataShared()->getCompositeVertexList().size();
+   //            size_t indexListSize = wo->getModel()->getModelDataShared()->getCompositeIndexList().size();
 
-   //{
-   //    // big
-   //    WO* wo = WO::New(bigfish, Vector(0.8, 0.8, 0.8));
-   //    wo->upon_async_model_loaded([wo, bigfish_skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(bigfish_skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(0, 30, 10);
-   //    wo->rotateAboutRelX(-90 * DEGtoRAD);
-   //    wo->rotateAboutRelZ(-125 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //}
+   //            vertexListCopy = new float[vertexListSize * 3];//might be a better way to do this without making a copy
+   //            indicesCopy = new unsigned int[indexListSize];//assuming the composite lists are stored in contiguous memory
 
-   //{
-   //    // goldFish
-   //    WO* wo = WO::New(goldfish, Vector(1, 1, 1));
-   //    wo->upon_async_model_loaded([wo, goldfish_skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(goldfish_skin).value());
+   //            for (size_t i = 0; i < vertexListSize; i++)
+   //            {
+   //                vertexListCopy[i * 3 + 0] = wo->getModel()->getModelDataShared()->getCompositeVertexList().at(i).x;
+   //                vertexListCopy[i * 3 + 1] = wo->getModel()->getModelDataShared()->getCompositeVertexList().at(i).y;
+   //                vertexListCopy[i * 3 + 2] = wo->getModel()->getModelDataShared()->getCompositeVertexList().at(i).z;
+   //            }
+
+   //            for (size_t i = 0; i < indexListSize; i++)
+   //                indicesCopy[i] = wo->getModel()->getModelDataShared()->getCompositeIndexList().at(i);
+
+   //            physx::PxTriangleMeshDesc meshDesc;
+   //            meshDesc.points.count = vertexListSize;
+   //            meshDesc.points.stride = sizeof(float) * 3;//tightly packaged
+   //            meshDesc.points.data = vertexListCopy;
+
+   //            meshDesc.triangles.count = indexListSize / 3;
+   //            meshDesc.triangles.stride = 3 * sizeof(unsigned int);//aside about index lists here
+   //            meshDesc.triangles.data = indicesCopy;
+
+   //            physx::PxDefaultMemoryOutputStream writeBuffer;
+   //            physx::PxTriangleMeshCookingResult::Enum result;
+   //            physx::PxCookingParams param = physx::PxCookingParams(physx::PxTolerancesScale());
+
+   //            bool status = PxCookTriangleMesh(param, meshDesc, writeBuffer, &result);
+   //            if (!status)
+   //            {
+   //                std::cout << "Failed to create Triangular mesh" << std::endl;
+   //                std::cin.get();
+   //            }
+
+   //            physx::PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+   //            physx::PxTriangleMesh* mesh = physics->createTriangleMesh(readBuffer);
+
+   //            physx::PxMaterial* gMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
+   //            physx::PxShape* shape = physics->createShape(physx::PxTriangleMeshGeometry(mesh), *gMaterial, true);
+   //            physx::PxTransform t({ 0,0,0 });
+
+   //            a = physics->createRigidStatic(t);
+   //            a->attachShape(*shape);
+
+   //            a->userData = this;
+   //            scene->addActor(*a);
+
+   //            //ModelMeshSkin& tex1 = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
+   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(terrain_skin).value());
    //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
    //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
    //            wo->getModel()->getSkins().push_back(std::move(spidey));
    //            wo->getModel()->useNextSkin();
+
+   //            wo->setPose(wo->getPose());
+
+   //            physx::PxMat44 m;
+   //            for (int i = 0; i < 16; i++) m(i % 4, i / 4) = wo->getPose().at(i);
+
+   //            a->setGlobalPose(physx::PxTransform(m));
+
    //        });
-   //    wo->setPosition(0, 25, 10);
    //    //wo->rotateAboutRelZ(45 * DEGtoRAD);
    //    worldLst->push_back(wo);
-   //}
-
-   //{
-   //    // 120, 125, 6
-   //    //pole
-   //    WO* wo = WO::New(pole, Vector(0.07, 0.07, 0.07));
-   //    wo->upon_async_model_loaded([wo, skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(124, 128, 6);
-   //    wo->rotateAboutRelZ(144 * DEGtoRAD);
-   //    wo->rotateAboutRelX(25 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //    fishingRod[0] = wo;
-   //}
-
-   //{
-   //    // 120, 125, 6
-   //    //Reel
-   //    WO* wo = WO::New(reel, Vector(0.07, 0.07, 0.07));
-   //    wo->upon_async_model_loaded([wo, skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(122.15, 125.77, 4.635);
-   //    wo->rotateAboutRelZ(144 * DEGtoRAD);
-   //    wo->rotateAboutRelX(25 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //    fishingRod[1] = wo;
-   //}
-
-   //{
-   //    // 120, 125, 6
-   //    //line
-   //    for (int i = 0; i < 3; i++)
-   //    {
-   //        WO* wo = WO::New(line2, Vector(0.07, 0.07, 0.07));
-   //        wo->upon_async_model_loaded([wo, skin, this]()
-   //            {
-   //                rel_x = wo->getModel()->getBoundingBox().getlxlylz().z;
-   //                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-   //                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //                //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //                wo->getModel()->getSkins().push_back(std::move(spidey));
-   //                wo->getModel()->useNextSkin();
-   //            });
-   //        wo->setPosition(127.78, 133.17, 6.57);
-   //        wo->rotateAboutRelZ(144 * DEGtoRAD);
-   //        //wo->rotateAboutRelX(55 *DEGtoRAD);
-   //        worldLst->push_back(wo);
-   //        fishingLines[i] = wo;
-   //    }
-   //}
-
-   //{
-   //    // 120, 125, 6
-   //    //bait
-   //    WO* wo = WO::New(bait, Vector(0.07, 0.07, 0.07));
-   //    wo->upon_async_model_loaded([wo, skin, this]()
-   //        {
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-   //        });
-   //    wo->setPosition(127.795, 133.145, 4.655);
-   //    wo->rotateAboutRelZ(144 * DEGtoRAD);
-   //    wo->rotateAboutRelZ(25 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //    fishingRod[2] = wo;
-   //}
-
-   //{
-   //    // 120, 125, 6
-   //    //Hand
-   //    WO* wo = WO::New(hand, Vector(0.08, 0.08, 0.08));
-   //    //wo->upon_async_model_loaded([wo, skin, this]()
-   //    //    {
-   //    //        ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
-   //    //        spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //    //        //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //    //        wo->getModel()->getSkins().push_back(std::move(spidey));
-   //    //        wo->getModel()->useNextSkin();
-   //    //    });
-   //    wo->setPosition(122.15, 125.77, 4.635);
-   //    wo->rotateAboutRelZ(240 * DEGtoRAD);
-   //    //wo->rotateAboutRelX(25 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //    fishingRod[1] = wo;
    //}
 
    //SkyBox Textures readily available

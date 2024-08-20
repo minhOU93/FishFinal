@@ -11,6 +11,7 @@ class WOPhysX : public virtual Aftr::WO
 
 		physx::PxRigidDynamic* a = nullptr;
 		physx::PxRigidStatic* b = nullptr;
+		physx::PxController* controller = nullptr;
 
 		void onCreate(const std::string& path, const Aftr::Vector& scale, const Aftr::Vector& pos, Aftr::MESH_SHADING_TYPE mst, physx::PxPhysics* p)
 		{
@@ -33,6 +34,7 @@ class WOPhysX : public virtual Aftr::WO
 
 			if (a != nullptr) m = a->getGlobalPose();
 			else if (b != nullptr) m = b->getGlobalPose();
+			else if (controller != nullptr) m = controller->getActor()->getGlobalPose();
 			
 
 			Aftr::Mat4 m2;
@@ -99,7 +101,7 @@ class WOPhysX : public virtual Aftr::WO
 
 		virtual void createActor(physx::PxPhysics* p, physx::PxScene* s) = 0;
 
-		virtual void createActor(physx::PxPhysics* p, physx::PxArticulationReducedCoordinate* a, physx::PxMat44 pose, physx::PxArticulationLink* parent = nullptr) = 0;
+		virtual void createActor(physx::PxPhysics* p, physx::PxScene* s, physx::PxControllerManager* c, Aftr::Vector pos) = 0;
 
 		~WOPhysX()
 		{

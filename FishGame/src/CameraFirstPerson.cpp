@@ -24,11 +24,19 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
 {
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
-    this->wheelButtonVelocityScalar = 1.0f;
+    this->wheelButtonVelocityScalar = 1.5f;
     this->wheelScrollCounter = 1;
     this->rel_x = 0;
     this->rel_y = 0;
     this->catch_score = 0.0f;
+    this->doneTerrain = false;
+
+    this->inventory["Blue Fish"] = 0;
+    this->inventory["Long Fin"] = 0;
+    this->inventory["Red Fish"] = 0;
+    this->inventory["Common Fish"] = 0;
+
+    this->inventory["Money"] = 0;
 }
 
 CameraFirstPerson::~CameraFirstPerson()
@@ -38,7 +46,7 @@ CameraFirstPerson::~CameraFirstPerson()
 void CameraFirstPerson::trackRod()
 {
     //ector yolo(this->getCameraLookAtPoint().x + 4, this->getCameraLookAtPoint().y, this->getCameraLookAtPoint().z);
-    Vector inFront(this->getCameraLookAtPoint() + (this->getLookDirection() * 9));
+    Vector inFront(this->getCameraLookAtPoint() + (this->getLookDirection() * 0.08));
     Mat4 hello;
 
     hello.setPosition(Vector(inFront.x, inFront.y, inFront.z));
@@ -46,9 +54,9 @@ void CameraFirstPerson::trackRod()
 
     fishingRod->setPose(hello);
 
-    fishingRod->rotateAboutRelZ(94 * DEGtoRAD);
+    fishingRod->rotateAboutRelZ(96.2 * DEGtoRAD);
 
-    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * -4.2);
+    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * -0.41);
 } 
 
 
@@ -56,28 +64,68 @@ void CameraFirstPerson::update()
 {
     // CameraStandard::update();
 
+    //if (keystates[SDL_SCANCODE_W])
+    //{
+    //    Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
+    //    this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * this->wheelButtonVelocityScalar));
+    //}
+    //else if (keystates[SDL_SCANCODE_A])
+    //{
+    //    this->moveLeft();
+
+    //}
+    //else if (keystates[SDL_SCANCODE_S])
+    //{
+    //    Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
+    //    this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * -1.0 * this->wheelButtonVelocityScalar));
+
+    //}
+    //else if (keystates[SDL_SCANCODE_D])
+    //{
+    //    this->moveRight();
+    //}
+
+    //if(fishingRod != nullptr) trackRod();
+
     if (keystates[SDL_SCANCODE_W])
     {
         Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
-        this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * this->wheelButtonVelocityScalar));
+        Vector dis(noZ * this->cameraVelocity * this->wheelButtonVelocityScalar);
+        
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
     }
     else if (keystates[SDL_SCANCODE_A])
     {
-        this->moveLeft();
+        Vector dis(this->getModel()->getRelYDir() * this->cameraVelocity * this->wheelButtonVelocityScalar);
+
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
 
     }
     else if (keystates[SDL_SCANCODE_S])
     {
         Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
-        this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * -1.0 * this->wheelButtonVelocityScalar));
+        Vector dis(noZ * -1.0f * this->cameraVelocity * this->wheelButtonVelocityScalar);
+
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
 
     }
     else if (keystates[SDL_SCANCODE_D])
     {
-        this->moveRight();
+        Vector dis(this->getModel()->getRelYDir() * this->cameraVelocity * -1.0f * this->wheelButtonVelocityScalar);
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
+
     }
 
+
+    if (doneTerrain && actor->controller != nullptr && collisionFlags != PxControllerCollisionFlag::eCOLLISION_DOWN)
+    {
+        collisionFlags = actor->controller->move(PxVec3(0, 0, -0.25), 1E-4, 1 / 60, collisionFilters);
+    }
+
+    if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z);
+
     if(fishingRod != nullptr) trackRod();
+
 }
 
 void CameraFirstPerson::onMouseDown(const SDL_MouseButtonEvent& e)
@@ -159,6 +207,20 @@ void CameraFirstPerson::onMouseUp(const SDL_MouseButtonEvent& e)
     SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
+//void CameraFirstPerson::changeLookForObj(int deltaX, int deltaY)
+//{
+//    if (deltaX == 0 && deltaY == 0)
+//        return;
+//
+//    actorMover->getModel()->rotateAboutGlobalAribitraryAxis(
+//        this->axisOfHorizontalRotationViaMouseMotion,
+//        (float)(((float)-deltaX) / this->mouseSensitivityDivider));
+//
+//    actorMover->getModel()->rotateAboutRelY((float)(((float)deltaY) / this->mouseSensitivityDivider));
+//
+//    //actor->setPose(actorMover->getPose());
+//}
+
 void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
 {
     // Update the current position
@@ -178,6 +240,8 @@ void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
     }
 
     this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
+
+    //if(actorMover != nullptr) changeLookForObj(rel_x * 0.5, rel_y * 0.5);
  }
 
 void CameraFirstPerson::setCameraVelocityMultiplier(float camVelMultiplier)

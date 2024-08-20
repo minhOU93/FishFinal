@@ -71,6 +71,9 @@ IF( WIN32 ) #MSVC Compiler library paths
                     debug "${AFTR_USERLAND_LIB_PATH}/PhysX/debug/PhysXCooking_64.lib"
                 optimized "${AFTR_USERLAND_LIB_PATH}/irrKlang.lib"
                     debug "${AFTR_USERLAND_LIB_PATH}/irrKlang.lib"
+                optimized "${AFTR_USERLAND_LIB_PATH}/PhysX/PhysXCharacterKinematic_static_64.lib"
+                    debug "${AFTR_USERLAND_LIB_PATH}/PhysX/debug/PhysXCharacterKinematic_static_64.lib"
+
                          )
 ENDIF()
 

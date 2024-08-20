@@ -2,6 +2,8 @@
 
 #include "CameraStandard.h"
 #include "WO.h"
+#include <map>
+#include "WOPxController.h"
 
 namespace Aftr
 {
@@ -28,10 +30,23 @@ namespace Aftr
 		virtual void moveRight(); ///< Pans camera to the 'right' (along camera's local -y axis)
 		virtual void setCameraVelocityMultiplier(float camVelMultiplier); ///< Multiplier must be greater than zero
 
+		void changeLookForObj(int deltaX, int deltaY);
+
 		void trackRod();
 		void setRod(WO* rod) { fishingRod = rod; }
 		void despawnRod();
 		void spawnRod();
+
+		std::map<std::string, int> inventory;
+
+		//WOPxObj* actor;
+		WO* actorMover;
+
+		WOPxController* actor;
+		physx::PxControllerCollisionFlags collisionFlags;
+		physx::PxControllerFilters collisionFilters;
+
+		bool doneTerrain;
 
 	protected:
 		float wheelButtonVelocityScalar;

@@ -11,6 +11,8 @@
 #include "GuiText.h"
 #include "CameraFishing.h"
 #include "WOPxKinematic.h"
+#include "Terrain.h"
+#include "WOPxController.h"
 
 namespace Aftr
 {
@@ -49,7 +51,7 @@ public:
    WO* vendor = nullptr;
 
    WOPxObj* holder = nullptr;
-   WOPxLink* test = nullptr;
+   //WOPxLink* test = nullptr;
 
    WOPxStatic* anchor = nullptr;
    WOPxStatic* anchor2 = nullptr;
@@ -57,12 +59,21 @@ public:
 
    physx::PxD6Joint* joint = nullptr;
    physx::PxSphericalJoint* Stringjoint = nullptr;
+   physx::PxControllerManager* controllerManager = nullptr;
+
+   physx::PxController* controller;
+   physx::PxControllerCollisionFlags collisionFlags;
+   physx::PxControllerFilters yo;
 
    Vector rayOutput;
+   WO* hello;
+
+   Terrain* wo1;
 
    AftrGeometricTerm occulude;
 
    WO* blocker = nullptr;
+   WOPxController* firstTest = nullptr;
 
    WOString* pressF = nullptr;
    float object_xyz[3] = { 0, 0, 0 };
