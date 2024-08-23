@@ -4,6 +4,7 @@
 #include "WO.h"
 #include <map>
 #include "WOPxController.h"
+#include "Fish.h"
 
 namespace Aftr
 {
@@ -47,6 +48,8 @@ namespace Aftr
 		physx::PxControllerFilters collisionFilters;
 
 		bool doneTerrain;
+
+		std::vector<Fish*>* fishData;
 
 	protected:
 		float wheelButtonVelocityScalar;

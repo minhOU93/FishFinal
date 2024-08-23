@@ -3,6 +3,13 @@
 #include "AftrImGuiIncludes.h"
 #include "ManagerWindowing.h"
 #include "ManagerEnvironmentConfiguration.h"
+#include "CameraFirstPerson.h"
+#include "Cat.h"
+
+#include <algorithm>
+#include <random>
+#include <cstdlib> 
+#include <limits>
 
 #include "stb/stb_image.h"
 
@@ -18,15 +25,51 @@ public:
 		return gui;
 	}
 
+	int generateRandomNumber(int min, int max) {
+		// Initialize a random device and a random number generator
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		// Define the range for the random number
+		std::uniform_int_distribution<> distr(min, max);
+
+		// Generate and return the random number
+		return distr(gen);
+	}
+
 	void drawImGui_for_this_frame()
 	{
 		//textBox("HIII!!!!!!!");
 
-		//sellMenu();
+		if (resetDialog)
+		{
+			resetDialog = false;
+			timer = 0;
+			victoryText = "";
+			disapperTimer = 0;
+			answer = "";
+			wordLength = 1;
+			realSpeed = 1;
+			puncChecker = 0;
+			startIndex = 0;
+		}
+
+	    sellMenu();
 
 		if(showProgress) fishCatchProgress(catchProgress, catchGoal);
 
 		if(showHealth) healthBar(health, 15);
+
+		if (showVictoryText)
+		{
+			streamText(victoryText, 0, 125, 2);
+		}
+
+		if (showDialog)
+		{
+			streamDialog(dialog, 300, 100, 1, true);
+		}
+
 	}
 
 	void setHealth(float hp) { health = hp; }
@@ -52,26 +95,221 @@ public:
 		ImGui::End();
 	}
 
+	void streamText(std::string text, int dx = 0, int dy = 125, int speed = 10)
+	{
+		getCenterPosition();
+
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
+
+		int offset_y = dy;
+		int offset_x = dx;
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.45f));
+		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+		ImGui::Begin("W", nullptr, window_flags);
+		if (timer != speed)
+		{
+			timer++;
+		}
+		else
+		{
+			wordLength++;
+			if(wordLength <= text.size()) answer = text.substr(0, wordLength);
+			timer = 0;
+		}
+
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), answer.c_str());
+
+		ImGui::PopStyleColor();
+		ImGui::End();
+	}
+
+	void streamDialog(std::string text, int dx = 0, int dy = 125, int speed = 10, bool disapper = false)
+	{
+		getCenterPosition();
+
+		//if (resetDialog)
+		//{
+		//	resetDialog = false;
+		//	timer = 0;
+		//	disapperTimer = 0;
+		//	answer = "";
+		//	wordLength = 1;
+		//	realSpeed = 1;
+		//	puncChecker = 0;
+		//}
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
+
+		int offset_y = dy;
+		int offset_x = dx;
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.45f));
+		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+
+		ImGui::Begin("Dialog", nullptr, window_flags);
+
+		ImGui::GetStyle().WindowRounding = 15.0f;
+
+		if (timer != realSpeed)
+		{
+			timer++;
+		}
+		else
+		{
+			wordLength++;
+			puncChecker++;
+			if (realSpeed == 34 && puncChecker != text.size())
+			{
+				startIndex = puncChecker;
+				wordLength = 1;
+				realSpeed = speed;
+			}
+			if (puncChecker <= text.size()) answer = text.substr(startIndex, wordLength);
+			timer = 0;
+		}
+
+		if (wordLength != 0 && puncChecker < text.size() && (text[puncChecker] == '!' || text[puncChecker] == '.' || text[puncChecker] == '?'))
+		{
+			realSpeed = 34;
+		}
+		else realSpeed = speed;
+
+		if (disapper && puncChecker >= text.size()) disapperTimer += 1;
+
+		if (disapper && disapperTimer == 150)
+		{
+			showDialog = false;
+			dialog = "";
+			timer = 0;
+			wordLength = 1;
+			disapperTimer = 0;
+			answer = "";
+			realSpeed = 1;
+			startIndex = 0;
+			puncChecker = 0;
+		}
+
+		ImGui::PushTextWrapPos(400.0f);
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), answer.c_str());
+		ImGui::PopTextWrapPos();
+
+		ImGui::PopStyleColor();
+		ImGui::End();
+	}
+
 	void sellMenu()
 	{
 		getCenterPosition();
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
-
-		int offset_y = -150;
-		int offset_x = -300;
+		ImGui::GetIO().FontGlobalScale = 1.2f;
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
+		int offset_y = 0; // -150;
+		int offset_x = -280;
 		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-		ImGui::Begin("Sell Fish Here", nullptr, window_flags);
+		ImVec2 window_size = ImVec2(500, 600); // Width: 800, Height: 600
+		ImGui::SetNextWindowSize(window_size);
+		std::string titleMoney = "Money: $" + std::to_string(player->inventory["Money"]);
+		ImGui::Begin("Shop", nullptr, window_flags);
+		ImGui::Text(titleMoney.c_str());
 
+		ImGui::BeginChild("ScrollableRegion", ImVec2(0, 0), true);
+		// CARP
+        std::string carp_amount = std::to_string(player->inventory[player->fishData->at(1)->name]);
 
 		ImGui::Image((void*)(intptr_t)carp_image, ImVec2(200, 150), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Common Carp\n\nAmount: 14");
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), ("Common Carp\n\nAmount: " + carp_amount).c_str());
 		ImGui::Separator();
-		ImGui::Button("Sell");
+		if (ImGui::Button("Sell Common Carp"))
+		{
+			if (player->inventory[player->fishData->at(1)->name] > 0)
+			{
+				resetDialog = true;
+
+				player->inventory[player->fishData->at(1)->name]--;
+				player->inventory["Money"] += player->fishData->at(1)->price;
+
+				dialog = catDialog->carpDialog[generateRandomNumber(0, catDialog->carpDialog.size() - 1)];
+
+				showDialog = true;
+			}
+		}
 		ImGui::SameLine();
-		ImGui::Text("$15");
+        ImGui::Text(("$" + std::to_string(player->fishData->at(1)->price)).c_str());
 		ImGui::Separator();
 
+		// LONG FIN
+		std::string fin_amount = std::to_string(player->inventory[player->fishData->at(2)->name]);
+
+		ImGui::Image((void*)(intptr_t)long_fin, ImVec2(200, 150), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), ("Long Fin\n\nAmount: " + fin_amount).c_str());
+		ImGui::Separator();
+		if (ImGui::Button("Sell Long Fin"))
+		{
+			if (player->inventory[player->fishData->at(2)->name] > 0)
+			{
+				resetDialog = true;
+
+				player->inventory[player->fishData->at(2)->name]--;
+				player->inventory["Money"] += player->fishData->at(2)->price;
+
+				dialog = catDialog->longDialog[generateRandomNumber(0, catDialog->longDialog.size() - 1)];
+
+				showDialog = true;
+			}
+		}
+		ImGui::SameLine();
+		ImGui::Text(("$" + std::to_string(player->fishData->at(2)->price)).c_str());
+		ImGui::Separator();
+
+		// RED FISH
+		std::string red_amount = std::to_string(player->inventory[player->fishData->at(3)->name]);
+
+		ImGui::Image((void*)(intptr_t)red_fish, ImVec2(200, 150), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), ("Red Fish\n\nAmount: " + red_amount).c_str());
+		ImGui::Separator();
+		if (ImGui::Button("Sell Red Fish"))
+		{
+			if (player->inventory[player->fishData->at(3)->name] > 0)
+			{
+				resetDialog = true;
+
+				player->inventory[player->fishData->at(3)->name]--;
+				player->inventory["Money"] += player->fishData->at(3)->price;
+
+				dialog = catDialog->redDialog[generateRandomNumber(0, catDialog->redDialog.size() - 1)];
+
+				showDialog = true;
+			}
+		}
+		ImGui::SameLine();
+		ImGui::Text(("$" + std::to_string(player->fishData->at(3)->price)).c_str());
+		ImGui::Separator();
+
+		// BLUE FISH
+		std::string blue_amount = std::to_string(player->inventory[player->fishData->at(0)->name]);
+
+		ImGui::Image((void*)(intptr_t)blue_fish, ImVec2(200, 150), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), ("Blue Fish\n\nAmount: " + blue_amount).c_str());
+		ImGui::Separator();
+		if (ImGui::Button("Sell Blue Fish"))
+		{
+			if (player->inventory[player->fishData->at(0)->name] > 0)
+			{
+				resetDialog = true;
+
+				player->inventory[player->fishData->at(0)->name]--;
+				player->inventory["Money"] += player->fishData->at(0)->price;
+
+				dialog = catDialog->blueDialog[generateRandomNumber(0, catDialog->blueDialog.size() - 1)];
+
+				showDialog = true;
+			}
+		}
+		ImGui::SameLine();
+		ImGui::Text(("$" + std::to_string(player->fishData->at(0)->price)).c_str());
+		ImGui::EndChild();
 		ImGui::End();
 	}
 
@@ -95,6 +333,7 @@ public:
 	void healthBar(float current, float total)
 	{
 		getCenterPosition();
+		ImGui::GetIO().FontGlobalScale = 1.0f;
 		if (health >= 0.5f)
 		{
 			float t = (health - 0.5f) / 0.5f;
@@ -192,6 +431,14 @@ public:
 	bool showProgress;
 
 	bool showVictoryText;
+	bool showDialog;
+	bool resetDialog;
+
+	std::string victoryText;
+	std::string dialog;
+
+	CameraFirstPerson* player;
+	Cat* catDialog;
 
 protected:
 	GuiText(WOGUI* parentWOGUI) : WOImGuiAbstract::WOImGuiAbstract(parentWOGUI), Aftr::IFace(this)
@@ -208,28 +455,65 @@ protected:
 
 		my_image_width = 0;
 		my_image_height = 0;
+		disapperTimer = 0;
+		realSpeed = 1;
 
 		std::string bait(ManagerEnvironmentConfiguration::getLMM() + "images/carp.png");
-		bool ret = LoadTextureFromFile(bait.c_str(), &carp_image, &my_image_width, &my_image_height);
-		auto pic = load_image_from_file(bait);
-		IM_ASSERT(ret);
+		std::string blueFish(ManagerEnvironmentConfiguration::getLMM() + "images/blue_fish.png");
+		std::string longFin(ManagerEnvironmentConfiguration::getLMM() + "images/long_fin.png");
+		std::string redFish(ManagerEnvironmentConfiguration::getLMM() + "images/red_fish.png");
+
+		{
+			bool ret = LoadTextureFromFile(bait.c_str(), &carp_image, &my_image_width, &my_image_height);
+			auto pic = load_image_from_file(bait);
+			IM_ASSERT(ret);
+		}
+
+		{
+			bool ret = LoadTextureFromFile(blueFish.c_str(), &blue_fish, &my_image_width, &my_image_height);
+			auto pic = load_image_from_file(blueFish);
+			IM_ASSERT(ret);
+		}
+
+		{
+			bool ret = LoadTextureFromFile(longFin.c_str(), &long_fin, &my_image_width, &my_image_height);
+			auto pic = load_image_from_file(longFin);
+			IM_ASSERT(ret);
+		}
+
+		{
+			bool ret = LoadTextureFromFile(redFish.c_str(), &red_fish, &my_image_width, &my_image_height);
+			auto pic = load_image_from_file(redFish);
+			IM_ASSERT(ret);
+		}
 
 		prev_height = ManagerWindowing::getWindowHeight();
 		prev_width = ManagerWindowing::getWindowWidth();
 
 		health = 1.0f;
 		catchProgress = 0;
+		startIndex = 0;
 
 		catchGoal = 1.0f;
 		showHealth = false;
 		showProgress = false;
 		timer = 0;
+		showVictoryText = false;
+		wordLength = 1;
+		answer = "";
+		showDialog = false;
+		puncChecker = 0;
 	}
 
 	int* x;
 	int* y;
 
 	int timer;
+	int wordLength;
+	int startIndex;
+	std::string answer;
+	int realSpeed;
+	int puncChecker;
 
 	int* window_pos_x;
 	int* window_pos_y;
@@ -239,6 +523,7 @@ protected:
 
 	int my_image_width;
 	int my_image_height;
+	int disapperTimer;
 
 	float x_scale = 1;
 	float y_scale = 1;
@@ -251,5 +536,8 @@ protected:
 	//ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
 
 	GLuint carp_image = 0;
+	GLuint blue_fish = 0;
+	GLuint red_fish = 0;
+	GLuint long_fin = 0;
 
 };

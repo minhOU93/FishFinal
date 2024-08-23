@@ -31,12 +31,14 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
     this->catch_score = 0.0f;
     this->doneTerrain = false;
 
-    this->inventory["Blue Fish"] = 0;
-    this->inventory["Long Fin"] = 0;
-    this->inventory["Red Fish"] = 0;
-    this->inventory["Common Fish"] = 0;
+    this->inventory["Blue Fish"] = 10;
+    this->inventory["Long Fin"] = 10;
+    this->inventory["Red Fish"] = 10;
+    this->inventory["Common Fish"] = 10;
 
     this->inventory["Money"] = 0;
+
+    fishData = new std::vector<Fish*>;
 }
 
 CameraFirstPerson::~CameraFirstPerson()
@@ -117,10 +119,11 @@ void CameraFirstPerson::update()
     }
 
 
-    if (doneTerrain && actor->controller != nullptr && collisionFlags != PxControllerCollisionFlag::eCOLLISION_DOWN)
+    if (actor->controller != nullptr && collisionFlags != PxControllerCollisionFlag::eCOLLISION_DOWN)
     {
-        collisionFlags = actor->controller->move(PxVec3(0, 0, -0.25), 1E-4, 1 / 60, collisionFilters);
+        collisionFlags = actor->controller->move(PxVec3(0, 0, -0.85), 1E-4, 1 / 60, collisionFilters);
     }
+
 
     if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z);
 
@@ -204,7 +207,7 @@ void CameraFirstPerson::moveRight()
 void CameraFirstPerson::onMouseUp(const SDL_MouseButtonEvent& e)
 {
     //CameraStandard::onMouseUp(e);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+      SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 //void CameraFirstPerson::changeLookForObj(int deltaX, int deltaY)
@@ -223,6 +226,8 @@ void CameraFirstPerson::onMouseUp(const SDL_MouseButtonEvent& e)
 
 void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
 {
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+
     // Update the current position
     SDL_GetRelativeMouseState(&rel_x, &rel_y);
 
@@ -238,6 +243,8 @@ void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
     {
         rel_y = 0;
     }
+
+    //if (fishingRod != nullptr) trackRod();
 
     this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
 

@@ -389,6 +389,8 @@ void CameraFishing::victoryScreen()
     }
     else
     {
+        gui->showVictoryText = true;
+        gui->victoryText = "You Caught a " + fishes[fishIndex]->name + "!";
         fishes[fishIndex]->isVisible = true;
         fishes[fishIndex]->setPosition(this->getCameraLookAtPoint() + (this->getLookDirection() * 8));
         //fishes[fishIndex]->rotateAboutRelZ(1 * DEGtoRAD);
@@ -412,6 +414,9 @@ void CameraFishing::returnFromVictory()
         returnVictory = false;
         begin = true;
         allowExit = true;
+        gui->showVictoryText = false;
+        gui->victoryText = "";
+        gui->resetDialog = true;
     }
 }
 

@@ -116,6 +116,8 @@ public:
 
 		this->setPosition(Aftr::Vector(0, 0, -80 - 283));
 
+		//this->rotateAboutRelZ(90 * DEGtoRAD);
+
 		this->setPose(this->getPose());
 
 	}

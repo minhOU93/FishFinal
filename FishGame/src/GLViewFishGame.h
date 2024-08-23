@@ -13,6 +13,8 @@
 #include "WOPxKinematic.h"
 #include "Terrain.h"
 #include "WOPxController.h"
+#include "CameraShop.h"
+#include "Cat.h"
 
 namespace Aftr
 {
@@ -71,6 +73,7 @@ public:
    Terrain* wo1;
 
    AftrGeometricTerm occulude;
+   Cat* cat;
 
    WO* blocker = nullptr;
    WOPxController* firstTest = nullptr;
@@ -88,7 +91,7 @@ public:
 
    CameraFishing* fishtime;
    CameraFirstPerson* firstPerson;
-
+   CameraShop* shop;
 
    //////////////////////////////////////////////////
 

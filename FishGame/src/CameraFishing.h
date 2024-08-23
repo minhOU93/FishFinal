@@ -64,6 +64,7 @@ namespace Aftr
 		Mat4 saveFishPose;
 
 		CameraFirstPerson* player;
+		std::vector<Fish*> fishes;
 
 	protected:
 		float wheelButtonVelocityScalar;
@@ -74,6 +75,8 @@ namespace Aftr
 		int rel_x;
 		int rel_y;
 		int angleVictory;
+
+		//std::vector<Fish*> fishes;
 
 		float catch_score;
 		float catch_goal;
@@ -90,7 +93,6 @@ namespace Aftr
 		std::vector<WO*> fishingRod;
 		std::vector<WO*> fishingLines;
 
-		std::vector<Fish*> fishes;
 
 		bool generate_fish;
 		bool start_time;

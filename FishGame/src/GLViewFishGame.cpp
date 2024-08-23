@@ -112,6 +112,12 @@ void GLViewFishGame::updateWorld()
                           //If you want to add additional functionality, do it after
                           //this call.
 
+   if (wo1->isDone == true)
+   {
+       firstPerson->actor->controller->setPosition(PxExtendedVec3(1414, 2054, -51));
+       wo1->isDone = false;
+   }
+
    if (this->cam == fishtime)
    {
        fishtime->spawnRod();
@@ -120,15 +126,16 @@ void GLViewFishGame::updateWorld()
        if (fishtime->failGame == true)
        {
            fishtime->failGame = false;
+           fishtime->resetGame();
            Vector camLookDir = this->cam->getLookDirection();
            Vector camNormalDir = this->cam->getNormalDirection();
-           Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 10);
+           Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, -60);
            HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
 
            this->cam = firstPerson;
            this->cam->setMouseHandler(camMouseHandler);
 
-           this->cam->setPosition(camPos);
+           firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x, camPos.y, camPos.z));
            this->cam->setCameraNormalDirection(camNormalDir);
            this->cam->setCameraLookDirection(camLookDir);
            this->cam->startCameraBehavior();
@@ -182,9 +189,6 @@ void GLViewFishGame::updateWorld()
            //}
        }
    }
-
-   if(wo1->isDone)
-        firstPerson->doneTerrain = wo1->isDone;
 }
 
 void GLViewFishGame::onResizeWindow( GLsizei width, GLsizei height )
@@ -250,13 +254,14 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
             fishtime->resetGame();
             Vector camLookDir = this->cam->getLookDirection();
             Vector camNormalDir = this->cam->getNormalDirection();
-            Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, 7);
+            Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, -60);
             HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
 
             this->cam = firstPerson;
             this->cam->setMouseHandler(camMouseHandler);
 
-            this->cam->setPosition(camPos);
+            //this->cam->setPosition(camPos);
+            firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x, camPos.y, camPos.z));
             this->cam->setCameraNormalDirection(camNormalDir);
             this->cam->setCameraLookDirection(camLookDir);
             this->cam->startCameraBehavior();
@@ -266,6 +271,26 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            fishtime->returnVictory = true;
            fishtime->showVictory = false;
            std::cout << "HELLO??" << std::endl;
+       }
+   }
+   else if (cam == shop)
+   {
+       if (key.keysym.sym == SDLK_f)
+       {
+           Vector camLookDir = this->cam->getLookDirection();
+           Vector camNormalDir = this->cam->getNormalDirection();
+           Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z + 0.1f);
+           HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+           this->cam = firstPerson;
+           this->cam->setMouseHandler(camMouseHandler);
+
+           //this->cam->setPosition(camPos);
+           firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x + 7, camPos.y + 0.5, camPos.z));
+
+           this->cam->setCameraNormalDirection(camNormalDir);
+           this->cam->setCameraLookDirection(camLookDir);
+           this->cam->startCameraBehavior();
        }
    }
 
@@ -340,15 +365,36 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
 
    if (key.keysym.sym == SDLK_5)
    {
-       firstPerson->actor->controller->setPosition(PxExtendedVec3(1414, 2054, 9));
-       //firstTest->setPosition(Vector(1414, 2054, -59));
-        //hello->moveRelative(Vector(1, 0, 0));
+       Vector camLookDir = this->cam->getLookDirection();
+       Vector camNormalDir = this->cam->getNormalDirection();
+       Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, -60);
+       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+       this->cam = firstPerson;
+       this->cam->setMouseHandler(camMouseHandler);
+
+       //this->cam->setPosition(camPos);
+       firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x, camPos.y, camPos.z));
+       this->cam->setCameraNormalDirection(camNormalDir);
+       this->cam->setCameraLookDirection(camLookDir);
+       this->cam->startCameraBehavior();
    }
 
    if (key.keysym.sym == SDLK_6)
    {
         
-       std::cout << firstTest->controller->getActor()->getGlobalPose().p.x << " , " << firstTest->controller->getActor()->getGlobalPose().p.y << " , " << firstTest->controller->getActor()->getGlobalPose().p.z << std::endl;
+       Vector camLookDir = this->cam->getLookDirection();
+       Vector camNormalDir = this->cam->getNormalDirection();
+       Vector camPos = this->cam->getPosition();
+
+       this->cam = shop;
+
+       //this->cam->setPosition(camPos);
+       this->cam->setCameraNormalDirection(Vector(0, 0, 1.0f));
+       Vector look(-0.991407, -0.121337, 0.049104);
+       this->cam->setCameraLookDirection(look);
+       this->cam->startCameraBehavior();
+       this->cam->setLabel("Camera");
 
    }
 
@@ -386,6 +432,9 @@ void Aftr::GLViewFishGame::loadMap()
    firstPerson = new CameraFirstPerson(this, this->cam->getMouseHandler());
 
    fishtime = new CameraFishing(this, this->cam->getMouseHandler());
+
+   shop = new CameraShop(this, this->cam->getMouseHandler());
+   shop->setPosition(1301.030396, 1839.195679, -51.920565);
    fishtime->player = firstPerson;
    //PxControllerManager* controllerManager = PxCreateControllerManager(*scene);
    {
@@ -402,7 +451,7 @@ void Aftr::GLViewFishGame::loadMap()
        this->scene->setFlag(physx::PxSceneFlag::eENABLE_ACTIVE_ACTORS, true);
    }
 
-   scene->setGravity(physx::PxVec3(0, 0, -9.81f));
+   //scene->setGravity(physx::PxVec3(0, 0, -9.81f));
    //articulation = physics->createArticulationReducedCoordinate();
 
    //PxMaterial* gMaterial = physics->createMaterial(0.9f, 0.5f, 0.6f);
@@ -448,6 +497,12 @@ void Aftr::GLViewFishGame::loadMap()
    std::string terrain(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Snow.obj");
    std::string terrain_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Normals.png");
 
+   std::string hole(ManagerEnvironmentConfiguration::getLMM() + "models/hole2/hole.obj");
+   std::string hole_skin(ManagerEnvironmentConfiguration::getLMM() + "models/hole2/TEXS.png");
+
+   std::string chair(ManagerEnvironmentConfiguration::getLMM() + "models/chair/chair.fbx");
+   std::string chair_skin(ManagerEnvironmentConfiguration::getLMM() + "models/chair/skin.png");
+
    //std::string terrain(ManagerEnvironmentConfiguration::getLMM() + "models/SnowTerrain/SnowTerrain.3ds");
    //std::string terrain_skin(ManagerEnvironmentConfiguration::getLMM() + "models/SnowTerrain/686.jpg");
 
@@ -460,25 +515,6 @@ void Aftr::GLViewFishGame::loadMap()
    ////blocker->isVisible = false;
    //worldLst->push_back(blocker);
 
-   {
-       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(10, 0, 0.5), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-       worldLst->push_back(yes);
-   }
-
-   {
-       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(12, 0, 0.9), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-       worldLst->push_back(yes);
-   }
-
-   {
-       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(14, 0, 1.1), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-       worldLst->push_back(yes);
-   }
-
-   {
-       WOPxStatic* yes = WOPxStatic::New(shinyRedPlasticCube, Vector(14, 0, 1.9), Vector(1, 2, 0.5), MESH_SHADING_TYPE::mstAUTO, physics, scene);
-       worldLst->push_back(yes);
-   }
    controllerManager = PxCreateControllerManager(*scene);
     
    firstTest = WOPxController::New(shinyRedPlasticCube, physics, scene, controllerManager, Vector(1414, 2054, 0));
@@ -508,26 +544,104 @@ void Aftr::GLViewFishGame::loadMap()
    }
 
    {
-       //psudeo player
+       // hole
+       Vector displacement(1707.334229, 1710.420288, -63.118397);
+       Vector old(120, 125, 6);
 
-       //std::string beachball(ManagerEnvironmentConfiguration::getSMM() + "/models/beachball.3ds");
-       //WOPxObj* box2 = WOPxObj::New(beachball, physics, scene, Vector(10, 10, 10), "sphere");
-
-       //hello = WO::New(shinyRedPlasticCube, Vector(1, 1, 1));
-
-       //box2->setPose(this->cam->getPose());
-       //hello->setPose(this->cam->getPose());
-       ////box2->setPosition(Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z));
-
-       //worldLst->push_back(box2);
-       //worldLst->push_back(hello);
-       //box2->isVisible = false;
-       //hello->isVisible = false;
-
-       //firstPerson->actor = box2;
-       //firstPerson->actorMover = hello;
+       Vector baitPosition(Vector(127.795, 133.145, 0.675) - old + displacement);
+       WO* wo = WO::New(hole, Vector(2, 2, 2));
+       wo->upon_async_model_loaded([wo, hole_skin, this]()
+           {
+               ModelMeshSkin spidey(ManagerTex::loadTexAsync(hole_skin).value());
+               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+               wo->getModel()->getSkins().push_back(std::move(spidey));
+               wo->getModel()->useNextSkin();
+           });
+       wo->setPosition(baitPosition);
+       //wo->rotateAboutRelZ(45 * DEGtoRAD);
+       worldLst->push_back(wo);
    }
 
+   {
+       // chair
+       Vector displacement(1707.334229, 1710.420288, -65.558397);
+       Vector old(120, 125, 6);
+
+       Vector baitPosition(Vector(127.795, 133.145, 0.675) - old + displacement);
+       WO* wo = WO::New(chair, Vector(0.07, 0.07, 0.07));
+       wo->upon_async_model_loaded([wo, chair_skin, this]()
+           {
+               ModelMeshSkin spidey(ManagerTex::loadTexAsync(chair_skin).value());
+               spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+               //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+               wo->getModel()->getSkins().push_back(std::move(spidey));
+               wo->getModel()->useNextSkin();
+           });
+       wo->setPosition(displacement);
+       wo->rotateAboutRelZ(137 * DEGtoRAD);
+       wo->moveRelative(wo->getModel()->getRelYDir() * -0.2);
+       worldLst->push_back(wo);
+   }
+    
+   {
+       std::string stool(ManagerEnvironmentConfiguration::getLMM() + "models/cardboard/Box.fbx");
+       std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/cardboard/skin.jpg");
+
+       std::string model(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/cat.obj");
+       std::string catSkin(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/skin.jpg");
+
+       {
+           WO* wo = WO::New(stool, Vector(0.04, 0.04, 0.04));
+           wo->setPosition(1294.24, 1841.5, -58.0);
+           wo->upon_async_model_loaded([wo, skin, this]()
+               {
+                   ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
+                   spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+                   //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+                   wo->getModel()->getSkins().push_back(std::move(spidey));
+                   wo->getModel()->useNextSkin();
+               });
+           wo->getModel()->rotateAboutRelZ(54 * DEGtoRAD);
+           worldLst->push_back(wo);
+       }
+
+       // CATT
+       {
+           cat = Cat::New(Vector(0.09, 0.09, 0.09));
+           cat->setPosition(1294.24, 1841.5, -52.45);
+           cat->getModel()->rotateAboutRelZ(76 * DEGtoRAD);
+           cat->getModel()->rotateAboutRelX(-90 * DEGtoRAD);
+           cat->getModel()->rotateAboutRelY(-4 * DEGtoRAD);
+
+           cat->initalizeDialogue();
+
+           //cat->isVisible = false;
+
+           worldLst->push_back(cat);
+       }
+       //{
+       //    std::string model2(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/cat_mouth_open.obj");
+       //     std::string catSkin2(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/mouth.jpg");
+
+       //     WO* wo = WO::New(model2, Vector(0.09, 0.09, 0.09));
+       //     wo->setPosition(1294.24, 1841.5, -52.45);
+       //     wo->getModel()->rotateAboutRelZ(76 * DEGtoRAD);
+       //     wo->getModel()->rotateAboutRelX(-90 * DEGtoRAD);
+       //     wo->getModel()->rotateAboutRelY(-4 * DEGtoRAD);
+       //     wo->upon_async_model_loaded([wo, catSkin2, this]()
+       //         {
+       //             ModelMeshSkin spidey(ManagerTex::loadTexAsync(catSkin2).value());
+       //             spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+       //             //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+       //             wo->getModel()->getSkins().push_back(std::move(spidey));
+       //             wo->getModel()->useNextSkin();
+       //         });
+       //     worldLst->push_back(wo);
+       //}
+
+
+   }
    {
         std::string terrain_data2(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Heightmap3.png"); //Mountain_Range.png alien4.png Ridge_NEW.png
         std::string world_skin(ManagerEnvironmentConfiguration::getLMM() + "models/Snow2/Normals.png");
@@ -553,93 +667,14 @@ void Aftr::GLViewFishGame::loadMap()
         this->worldLst->push_back((WOGridECEFElevation*)wo1);
     }
 
-   //{
-   //    //mountain
-   //    WO* wo = WO::New(terrain, Vector(100, 100, 100));
-   //    //wo->rotateAboutRelX(-90 * DEGtoRAD);
-   //    wo->setPosition(0, 0, 180);
-   //    wo->upon_async_model_loaded([wo, terrain_skin, this]()
-   //        {
-
-   //            float* vertexListCopy = nullptr;
-   //            unsigned int* indicesCopy = nullptr;
-   //            physx::PxRigidActor* a = nullptr;
-
-   //            size_t vertexListSize = wo->getModel()->getModelDataShared()->getCompositeVertexList().size();
-   //            size_t indexListSize = wo->getModel()->getModelDataShared()->getCompositeIndexList().size();
-
-   //            vertexListCopy = new float[vertexListSize * 3];//might be a better way to do this without making a copy
-   //            indicesCopy = new unsigned int[indexListSize];//assuming the composite lists are stored in contiguous memory
-
-   //            for (size_t i = 0; i < vertexListSize; i++)
-   //            {
-   //                vertexListCopy[i * 3 + 0] = wo->getModel()->getModelDataShared()->getCompositeVertexList().at(i).x;
-   //                vertexListCopy[i * 3 + 1] = wo->getModel()->getModelDataShared()->getCompositeVertexList().at(i).y;
-   //                vertexListCopy[i * 3 + 2] = wo->getModel()->getModelDataShared()->getCompositeVertexList().at(i).z;
-   //            }
-
-   //            for (size_t i = 0; i < indexListSize; i++)
-   //                indicesCopy[i] = wo->getModel()->getModelDataShared()->getCompositeIndexList().at(i);
-
-   //            physx::PxTriangleMeshDesc meshDesc;
-   //            meshDesc.points.count = vertexListSize;
-   //            meshDesc.points.stride = sizeof(float) * 3;//tightly packaged
-   //            meshDesc.points.data = vertexListCopy;
-
-   //            meshDesc.triangles.count = indexListSize / 3;
-   //            meshDesc.triangles.stride = 3 * sizeof(unsigned int);//aside about index lists here
-   //            meshDesc.triangles.data = indicesCopy;
-
-   //            physx::PxDefaultMemoryOutputStream writeBuffer;
-   //            physx::PxTriangleMeshCookingResult::Enum result;
-   //            physx::PxCookingParams param = physx::PxCookingParams(physx::PxTolerancesScale());
-
-   //            bool status = PxCookTriangleMesh(param, meshDesc, writeBuffer, &result);
-   //            if (!status)
-   //            {
-   //                std::cout << "Failed to create Triangular mesh" << std::endl;
-   //                std::cin.get();
-   //            }
-
-   //            physx::PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
-   //            physx::PxTriangleMesh* mesh = physics->createTriangleMesh(readBuffer);
-
-   //            physx::PxMaterial* gMaterial = physics->createMaterial(0.5f, 0.5f, 0.6f);
-   //            physx::PxShape* shape = physics->createShape(physx::PxTriangleMeshGeometry(mesh), *gMaterial, true);
-   //            physx::PxTransform t({ 0,0,0 });
-
-   //            a = physics->createRigidStatic(t);
-   //            a->attachShape(*shape);
-
-   //            a->userData = this;
-   //            scene->addActor(*a);
-
-   //            //ModelMeshSkin& tex1 = wo->getModel()->getModelDataShared()->getModelMeshes().at(0)->getSkins().at(0);
-   //            ModelMeshSkin spidey(ManagerTex::loadTexAsync(terrain_skin).value());
-   //            spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
-   //            //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
-   //            wo->getModel()->getSkins().push_back(std::move(spidey));
-   //            wo->getModel()->useNextSkin();
-
-   //            wo->setPose(wo->getPose());
-
-   //            physx::PxMat44 m;
-   //            for (int i = 0; i < 16; i++) m(i % 4, i / 4) = wo->getPose().at(i);
-
-   //            a->setGlobalPose(physx::PxTransform(m));
-
-   //        });
-   //    //wo->rotateAboutRelZ(45 * DEGtoRAD);
-   //    worldLst->push_back(wo);
-   //}
-
    //SkyBox Textures readily available
    std::vector< std::string > skyBoxImageNames; //vector to store texture paths
+   //skyBoxImageNames.push_back(ManagerEnvironmentConfiguration::getLMM() + "images/Areskutan.jpg");
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_water+6.jpg" );
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_dust+6.jpg" );
-   skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_mountains+6.jpg" );
+   //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_mountains+6.jpg" );
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_winter+6.jpg" );
-   //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/early_morning+6.jpg" );
+   skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/early_morning+6.jpg" );
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_afternoon+6.jpg" );
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_cloudy+6.jpg" );
    //skyBoxImageNames.push_back( ManagerEnvironmentConfiguration::getSMM() + "/images/skyboxes/sky_cloudy3+6.jpg" );
@@ -822,6 +857,10 @@ void Aftr::GLViewFishGame::loadMap()
    //this->worldLst->push_back( gui );
    this->worldLst->push_back(yo);
    fishtime->gui = yo;
+   firstPerson->fishData = &fishtime->fishes;
+   //yo->fishData = fishtime;
+   yo->player = firstPerson;
+   yo->catDialog = cat;
    createFishGameWayPoints();
 }
 
