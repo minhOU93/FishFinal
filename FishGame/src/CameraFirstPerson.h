@@ -51,7 +51,6 @@ namespace Aftr
 		bool doneTerrain;
 
 		std::vector<Fish*>* fishData;
-		irrklang::ISoundEngine* soundPlayer;
 		irrklang::ISound* playWalking;
 
 	protected:

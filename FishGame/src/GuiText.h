@@ -75,6 +75,8 @@ public:
 			streamDialog(dialog, 300, 100, 1, true);
 		}
 
+		if(showInventory) inventoryGui();
+
 	}
 
 	void setHealth(float hp) { health = hp; }
@@ -411,6 +413,43 @@ public:
 
 	}
 
+	void inventoryGui()
+	{
+		getCenterPosition();
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
+		ImGui::GetIO().FontGlobalScale = 1.2f;
+		int offset_y = 0;
+		int offset_x = 0;
+
+		ImGui::SetNextWindowPos(ImVec2(*x + offset_x, *y + offset_y), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+		ImVec2 window_size = ImVec2(400, 400); // Width: 800, Height: 600
+		ImGui::SetNextWindowSize(window_size);
+
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.75f));
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.37f, 0.0f, 0.24f, 0.75f));
+		ImGui::Begin("Inventory", nullptr, window_flags);
+
+		std::string titleMoney = "Money: $" + std::to_string(player->inventory["Money"]);
+
+		ImGui::Text(titleMoney.c_str());
+
+		ImGui::BeginChild("Yesss", ImVec2(0, 0), true);
+		for (auto it : player->inventory)
+		{
+			if (it.first != "Money" && it.second != 0)
+			{
+				std::string layout = it.first + ": " + std::to_string(it.second);
+				ImGui::Text(layout.c_str());
+				ImGui::Separator();
+			}
+
+		}
+		ImGui::EndChild();
+
+		ImGui::PopStyleColor(2);
+		ImGui::End();
+	}
+
 	// Simple helper function to load an image into a OpenGL texture with common settings
 	bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 	{
@@ -472,6 +511,8 @@ public:
 	bool showShop;
 	bool showShopText;
 
+	bool showInventory;
+
 	std::string victoryText;
 	std::string dialog;
 
@@ -495,6 +536,7 @@ protected:
 		window_pos_x = new int;
 		window_pos_y = new int;
 
+		showInventory = false;
 		indicator = "";
 		showShopText = false;
 
@@ -502,6 +544,8 @@ protected:
 		my_image_height = 0;
 		disapperTimer = 0;
 		realSpeed = 1;
+
+		resetDialog = false;
 
 		std::string bait(ManagerEnvironmentConfiguration::getLMM() + "images/carp.png");
 		std::string blueFish(ManagerEnvironmentConfiguration::getLMM() + "images/blue_fish.png");

@@ -227,22 +227,22 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         blue_fish->rotateAboutRelX(180 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(blue_fish);
         fishes[0] = blue_fish;
-        blue_fish->struggleRange.first = 3;
-        blue_fish->struggleRange.second = 5;
+        blue_fish->struggleRange.first = 1;
+        blue_fish->struggleRange.second = 3;
         blue_fish->name = "Blue Fish";
         blue_fish->price = 16;
-        blue_fish->difficulty = 17.8f;
+        blue_fish->difficulty = 18.8f;
 
         Fish* fish = Fish::New(fish_path, fish_skin);
         fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
         fish->rotateAboutRelX(-90 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(fish);
         fishes[1] = fish;
-        fish->struggleRange.first = 4;
-        fish->struggleRange.second = 6;
+        fish->struggleRange.first = 3;
+        fish->struggleRange.second = 4;
         fish->name = "Common Fish";
         fish->price = 6;
-        fish->difficulty = 11.3f;
+        fish->difficulty = 12.3f;
 
         Fish* long_fin = Fish::New(long_fin_path, long_fin_skin);
         long_fin->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
@@ -250,11 +250,11 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         long_fin->rotateAboutRelX(125 * DEGtoRAD);
         ManagerGLView::getGLView()->getWorldContainer()->push_back(long_fin);
         fishes[2] = long_fin;
-        long_fin->struggleRange.first = 5;
-        long_fin->struggleRange.second = 6;
+        long_fin->struggleRange.first = 3;
+        long_fin->struggleRange.second = 5;
         long_fin->name = "Long Fin";
         long_fin->price = 3;
-        long_fin->difficulty = 4.33f;
+        long_fin->difficulty = 6.33f;
 
         Fish* red_fish = Fish::New(redfish_path, redfish_skin);
         red_fish->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
@@ -266,7 +266,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         red_fish->struggleRange.second = 4;
         red_fish->name = "Red Fish";
         red_fish->price = 12;
-        red_fish->difficulty = 14.6;
+        red_fish->difficulty = 15.6;
 
         for (int i = 0; i < fishes.size(); i++)
         {
@@ -340,6 +340,7 @@ void CameraFishing::resetGame()
     endGame = false;
     fish_struggle = false;
     reelSpeed = 0.04;
+    allowExit = true;
 
     gui->showHealth = false;
     gui->showProgress = false;

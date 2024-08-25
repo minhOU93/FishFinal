@@ -36,7 +36,5 @@ namespace Aftr
 
 		int save_x;
 		int save_y;
-
-		irrklang::ISoundEngine* soundPlayer;
 	};
 }
