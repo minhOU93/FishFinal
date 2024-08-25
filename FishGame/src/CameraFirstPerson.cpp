@@ -31,10 +31,10 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
     this->catch_score = 0.0f;
     this->doneTerrain = false;
 
-    this->inventory["Blue Fish"] = 10;
-    this->inventory["Long Fin"] = 10;
-    this->inventory["Red Fish"] = 10;
-    this->inventory["Common Fish"] = 10;
+    this->inventory["Blue Fish"] = 0;
+    this->inventory["Long Fin"] = 0;
+    this->inventory["Red Fish"] = 0;
+    this->inventory["Common Fish"] = 0;
 
     this->inventory["Money"] = 0;
 
@@ -95,12 +95,14 @@ void CameraFirstPerson::update()
         Vector dis(noZ * this->cameraVelocity * this->wheelButtonVelocityScalar);
         
         collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
+        playWalking->setIsPaused(false);
     }
     else if (keystates[SDL_SCANCODE_A])
     {
         Vector dis(this->getModel()->getRelYDir() * this->cameraVelocity * this->wheelButtonVelocityScalar);
 
         collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
+        playWalking->setIsPaused(false);
 
     }
     else if (keystates[SDL_SCANCODE_S])
@@ -109,13 +111,20 @@ void CameraFirstPerson::update()
         Vector dis(noZ * -1.0f * this->cameraVelocity * this->wheelButtonVelocityScalar);
 
         collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
+        playWalking->setIsPaused(false);
 
     }
     else if (keystates[SDL_SCANCODE_D])
     {
         Vector dis(this->getModel()->getRelYDir() * this->cameraVelocity * -1.0f * this->wheelButtonVelocityScalar);
         collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
+        playWalking->setIsPaused(false);
 
+    }
+    else
+    {
+        playWalking->setIsPaused(true);
+        playWalking->setPlayPosition(0);
     }
 
 

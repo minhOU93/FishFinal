@@ -41,5 +41,6 @@ public:
     std::pair<int, int> struggleRange;
     int price;
     std::string name;
+    float difficulty;
 
 };

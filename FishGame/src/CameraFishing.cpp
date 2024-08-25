@@ -81,7 +81,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
 
     this->begin = false;
     this->catch_score = 0.0f;
-    this->catch_goal = 3.4f;
+    this->catch_goal = 11.4f;
     this->pole_health = 100.0f;
     this->reelOutStatus = false;
     this->allowExit = true;
@@ -231,6 +231,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         blue_fish->struggleRange.second = 5;
         blue_fish->name = "Blue Fish";
         blue_fish->price = 16;
+        blue_fish->difficulty = 17.8f;
 
         Fish* fish = Fish::New(fish_path, fish_skin);
         fish->setPosition(baitPosition.x - 0.3, baitPosition.y, baitPosition.z - 3.1);
@@ -241,6 +242,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         fish->struggleRange.second = 6;
         fish->name = "Common Fish";
         fish->price = 6;
+        fish->difficulty = 11.3f;
 
         Fish* long_fin = Fish::New(long_fin_path, long_fin_skin);
         long_fin->setPosition(baitPosition.x, baitPosition.y, baitPosition.z - 3.1);
@@ -252,6 +254,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         long_fin->struggleRange.second = 6;
         long_fin->name = "Long Fin";
         long_fin->price = 3;
+        long_fin->difficulty = 4.33f;
 
         Fish* red_fish = Fish::New(redfish_path, redfish_skin);
         red_fish->setPosition(baitPosition.x - 0.2, baitPosition.y - 0.4, baitPosition.z - 3.1);
@@ -263,13 +266,12 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
         red_fish->struggleRange.second = 4;
         red_fish->name = "Red Fish";
         red_fish->price = 12;
+        red_fish->difficulty = 14.6;
 
         for (int i = 0; i < fishes.size(); i++)
         {
             fishes[i]->isVisible = false;
         }
-        
-
 
     }
 }
@@ -336,6 +338,8 @@ void CameraFishing::resetGame()
     fish_bite = false;
     reelCheck = 0.0f;
     endGame = false;
+    fish_struggle = false;
+    reelSpeed = 0.04;
 
     gui->showHealth = false;
     gui->showProgress = false;
@@ -376,6 +380,10 @@ void CameraFishing::resetGame()
     }
     pole_health = 100.0f;
     catch_score = 0;
+
+    playFishStruggle->setIsPaused(true);
+    playReelIn->setIsPaused(true);
+    playReelOut->setIsPaused(true);
 }
 
 void CameraFishing::victoryScreen()
@@ -432,7 +440,7 @@ void CameraFishing::update()
 
         reelOutStatus = true;
 
-        gui->catchGoal = catch_goal;
+        gui->catchGoal = fishes[fishIndex]->difficulty;
         begin = false;
     }
     else if (reelOutStatus)
@@ -453,23 +461,29 @@ void CameraFishing::update()
     {
         gui->showHealth = true;
         pole_health -= 0.1f;
+        playFishStruggle->setIsPaused(false);
         //gui->setHealth(float(pole_health / 100));
         fishingRod[1]->getModel()->rotateAboutRelX(-10 * DEGtoRAD);
         if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
         {
+            this->catch_goal = fishes[fishIndex]->difficulty;
             startGame = true;
             fish_bite = false;
             start_time = true;
             fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
             gui->showProgress = true;
             allowExit = false;
+
+            playFishStruggle->setIsPaused(true);
         }
     }
-    else if (startGame)
+    else if (startGame && !failGame)
     {
         if (fish_struggle)
         {
             shakeCamera();
+            playFishStruggle->setIsPaused(false);
+            fishingRod[1]->getModel()->rotateAboutRelX(-12 * DEGtoRAD);
         }
 
         if (start_time)
@@ -488,6 +502,7 @@ void CameraFishing::update()
             fish_struggle = false;
             start_time = true;
             fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
+            playFishStruggle->setIsPaused(true);
         }
 
         if (!fish_struggle && this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
@@ -500,6 +515,7 @@ void CameraFishing::update()
                 reelSpeed = 0.01;
             }
             catch_score += 0.02f;
+            if (playReelIn->getIsPaused()) playReelIn->setIsPaused(false);
             //gui->setCatchProgress(catch_score);
 
         }
@@ -507,9 +523,14 @@ void CameraFishing::update()
         {
             pole_health -= 0.5f;
 
-            std::cout << "HEALTH SCORE: " << pole_health << std::endl;
+            //std::cout << "HEALTH SCORE: " << pole_health << std::endl;
             //if (pole_health >= 0.0f)
             //    gui->setHealth(float(pole_health / 100));
+        }
+
+        if (playReelIn->getIsPaused() == false && this->mouseHandler->isMouseDownLeftButton() == false)
+        {
+            playReelIn->setIsPaused(true);
         }
 
         if (catch_score >= catch_goal)
@@ -524,6 +545,7 @@ void CameraFishing::update()
 
             gui->showHealth = false;
             gui->showProgress = false;
+            playReelIn->setIsPaused(true);
 
             player->inventory[fishes[fishIndex]->getName()]++;
         }
@@ -541,6 +563,8 @@ void CameraFishing::update()
         normalizeCamera();
 
         reelSpeed = 0.04;
+        playReelOut->setIsPaused(false);
+        fishingRod[1]->getModel()->rotateAboutRelX(3 * DEGtoRAD);
         reelIn();
     }
 
@@ -587,6 +611,7 @@ void CameraFishing::reelIn()
     }
     else
     {
+        playReelOut->setIsPaused(true);
         endGame = false;
         saveFishPose = fishes[fishIndex]->getPose();
         sleep_for(milliseconds(650));
@@ -600,6 +625,7 @@ void CameraFishing::reelOut()
 {
     if (reelCheck <= 1.5)
     {
+        playReelOut->setIsPaused(false);
         fishingLines[1]->moveRelative(Vector(0, 0, -reelSpeed));
         fishingLines[2]->moveRelative(Vector(0, 0, -reelSpeed));
         fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
@@ -630,6 +656,8 @@ void CameraFishing::reelOut()
         reelOutStatus = false;
         startWait = true;
         start_timer = std::chrono::high_resolution_clock::now();
+
+        playReelOut->setIsPaused(true);
     }
 
     reelCheck += reelSpeed;

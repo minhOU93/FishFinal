@@ -38,10 +38,29 @@ public:
         return cat;
     }
 
-    //WO* frame;
+    void moveMouth()
+    {
+        if (!mouthOpen)
+        {
+            this->isVisible = false;
+            frame->isVisible = true;
+
+            mouthOpen = true;
+        }
+        else
+        {
+            this->isVisible = true;
+            frame->isVisible = false;
+
+            mouthOpen = false;
+        }
+    }
+
+    WO* frame;
 
     void initalizeDialogue()
     {
+        mouthOpen = false;
         //redDialog.resize(3);
         //blueDialog.resize(3);
         //carpDialog.resize(3);
@@ -62,9 +81,30 @@ public:
         longDialog.push_back("A small fish, but every bite counts!Even the little ones have their charm.I'll take it off your hands, and who knows--might be the perfect snack for a picky customer!");
         longDialog.push_back("Well, it may be small, but it's got spirit!Not every day's a big catch, but I'll make the best of it.Here's your payment--every fish matters in my shop!");
         longDialog.push_back("A small fish today?No worries, they all have their place.I'll make sure this one finds a good use.Keep at it--you never know what tomorrow will bring!");
+
+        std::string model2(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/cat_mouth_open.obj");
+        std::string catSkin2(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/skin.jpg");
+
+        frame = WO::New(model2, Vector(0.09, 0.09, 0.09));
+        frame->setPosition(1294.24, 1841.5, -52.45);
+        frame->getModel()->rotateAboutRelZ(76 * DEGtoRAD);
+        frame->getModel()->rotateAboutRelX(-90 * DEGtoRAD);
+        frame->getModel()->rotateAboutRelY(-4 * DEGtoRAD);
+        frame->upon_async_model_loaded([catSkin2, this]()
+            {
+                ModelMeshSkin spidey(ManagerTex::loadTexAsync(catSkin2).value());
+                spidey.setMeshShadingType(MESH_SHADING_TYPE::mstAUTO);
+                //spidey.getMultiTextureSet().at(0).setTexRepeats(3.0f);
+                frame->getModel()->getSkins().push_back(std::move(spidey));
+                frame->getModel()->useNextSkin();
+            });
+        frame->isVisible = false;
     }
     std::vector<std::string> redDialog;
     std::vector<std::string> blueDialog;
     std::vector<std::string> carpDialog;
     std::vector<std::string> longDialog;
+
+    bool mouthOpen;
+protected:
 };

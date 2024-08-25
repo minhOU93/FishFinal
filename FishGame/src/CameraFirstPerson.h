@@ -5,6 +5,7 @@
 #include <map>
 #include "WOPxController.h"
 #include "Fish.h"
+#include "irrKlang.h"
 
 namespace Aftr
 {
@@ -50,6 +51,8 @@ namespace Aftr
 		bool doneTerrain;
 
 		std::vector<Fish*>* fishData;
+		irrklang::ISoundEngine* soundPlayer;
+		irrklang::ISound* playWalking;
 
 	protected:
 		float wheelButtonVelocityScalar;

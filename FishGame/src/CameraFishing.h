@@ -8,6 +8,7 @@
 #include <cstdlib> 
 #include <limits>
 #include "CameraFirstPerson.h"
+#include "irrKlang.h"
 
 namespace Aftr
 {
@@ -65,6 +66,13 @@ namespace Aftr
 
 		CameraFirstPerson* player;
 		std::vector<Fish*> fishes;
+		irrklang::ISoundEngine* soundPlayer;
+
+
+		//irrklang::ISoundSource* reelInSFX;
+		irrklang::ISound* playReelIn;
+		irrklang::ISound* playReelOut;
+		irrklang::ISound* playFishStruggle;
 
 	protected:
 		float wheelButtonVelocityScalar;

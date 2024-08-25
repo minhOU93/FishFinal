@@ -10,6 +10,7 @@
 #include <random>
 #include <cstdlib> 
 #include <limits>
+#include "irrKlang.h"
 
 #include "stb/stb_image.h"
 
@@ -39,7 +40,9 @@ public:
 
 	void drawImGui_for_this_frame()
 	{
-		//textBox("HIII!!!!!!!");
+		if(showFish) textBox(indicator);
+
+		if(showShopText) textBox(indicator);
 
 		if (resetDialog)
 		{
@@ -52,9 +55,11 @@ public:
 			realSpeed = 1;
 			puncChecker = 0;
 			startIndex = 0;
+			playTalk->setIsPaused(true);
+			playWinSound->setIsPaused(true);
 		}
 
-	    sellMenu();
+	    if(showShop) sellMenu();
 
 		if(showProgress) fishCatchProgress(catchProgress, catchGoal);
 
@@ -101,6 +106,8 @@ public:
 
 		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar;
 
+		ImGui::GetIO().FontGlobalScale = 1.5f;
+
 		int offset_y = dy;
 		int offset_x = dx;
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.45f));
@@ -114,8 +121,17 @@ public:
 		else
 		{
 			wordLength++;
-			if(wordLength <= text.size()) answer = text.substr(0, wordLength);
+			if (wordLength <= text.size())
+			{
+				answer = text.substr(0, wordLength);
+				playWinSound->setIsPaused(false);
+			}
 			timer = 0;
+		}
+
+		if (wordLength >= text.size())
+		{
+			playWinSound->setIsPaused(true);
 		}
 
 		ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), answer.c_str());
@@ -162,18 +178,36 @@ public:
 				startIndex = puncChecker;
 				wordLength = 1;
 				realSpeed = speed;
+				playTalk->setIsPaused(true);
 			}
-			if (puncChecker <= text.size()) answer = text.substr(startIndex, wordLength);
+			if (puncChecker <= text.size())
+			{
+				answer = text.substr(startIndex, wordLength);
+				if (puncChecker % 2 == 0)
+				{
+					catDialog->moveMouth();
+					playTalk->setIsPaused(false);
+				}
+			}
 			timer = 0;
 		}
 
 		if (wordLength != 0 && puncChecker < text.size() && (text[puncChecker] == '!' || text[puncChecker] == '.' || text[puncChecker] == '?'))
 		{
 			realSpeed = 34;
+			catDialog->mouthOpen = true;
+			catDialog->moveMouth();
+			playTalk->setIsPaused(true);
 		}
 		else realSpeed = speed;
 
-		if (disapper && puncChecker >= text.size()) disapperTimer += 1;
+		if (disapper && puncChecker >= text.size())
+		{
+			disapperTimer += 1;
+			catDialog->mouthOpen = true;
+			catDialog->moveMouth();
+			playTalk->setIsPaused(true);
+		}
 
 		if (disapper && disapperTimer == 150)
 		{
@@ -434,24 +468,35 @@ public:
 	bool showDialog;
 	bool resetDialog;
 
+	bool showFish;
+	bool showShop;
+	bool showShopText;
+
 	std::string victoryText;
 	std::string dialog;
 
+	std::string indicator;
+
 	CameraFirstPerson* player;
 	Cat* catDialog;
+
+	irrklang::ISound* playTalk;
+	irrklang::ISound* playWinSound;
 
 protected:
 	GuiText(WOGUI* parentWOGUI) : WOImGuiAbstract::WOImGuiAbstract(parentWOGUI), Aftr::IFace(this)
 	{
 
 		//glewInit();
-		std::cout << "HELLO" << std::endl;
 
 		x = new int;
 		y = new int;
 
 		window_pos_x = new int;
 		window_pos_y = new int;
+
+		indicator = "";
+		showShopText = false;
 
 		my_image_width = 0;
 		my_image_height = 0;
@@ -503,6 +548,9 @@ protected:
 		answer = "";
 		showDialog = false;
 		puncChecker = 0;
+
+		showShop = false;
+		showFish = false;
 	}
 
 	int* x;
@@ -514,6 +562,8 @@ protected:
 	std::string answer;
 	int realSpeed;
 	int puncChecker;
+
+	GuiText* yo = nullptr;
 
 	int* window_pos_x;
 	int* window_pos_y;

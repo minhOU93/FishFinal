@@ -7,6 +7,7 @@ using namespace std;
 #include "CameraFirstPerson.h"
 #include "HandlerMouseState.h"
 #include "Model.h"
+#include "ManagerWindowing.h"
 
 #include "SDL.h"
 
@@ -63,10 +64,26 @@ void CameraShop::onMouseUp(const SDL_MouseButtonEvent& e)
     //std::cout << "Time taken by function: " << duration.count() << " seconds" << std::endl;
 
     //end_time = true;
+
+    //SDL_SetRelativeMouseMode(SDL_FALSE);
+}
+
+void CameraShop::setReltoTrue()
+{
+    SDL_WarpMouseInWindow(ManagerWindowing::getCurrentWindow(), save_x, save_y);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+}
+
+void CameraShop::setReltoFalse()
+{
+    SDL_GetRelativeMouseState(&save_x, &save_y);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_WarpMouseInWindow(ManagerWindowing::getCurrentWindow(), ManagerWindowing::getWindowWidth() / 2, ManagerWindowing::getWindowHeight() / 2);
 }
 
 void CameraShop::onMouseMove(const SDL_MouseMotionEvent& e)
 {
+    SDL_GetRelativeMouseState(&save_x, &save_y);
     // Update the current position
-    SDL_SetRelativeMouseMode(SDL_FALSE);
+    //SDL_SetRelativeMouseMode(SDL_FALSE);
 }

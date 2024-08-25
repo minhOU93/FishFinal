@@ -9,6 +9,8 @@
 #include <limits>
 #include "CameraFirstPerson.h"
 
+#include "irrKlang.h"
+
 namespace Aftr
 {
 	class CameraShop : public Camera
@@ -28,5 +30,13 @@ namespace Aftr
 		virtual void onMouseUp(const SDL_MouseButtonEvent& e);
 		virtual void onMouseWheelScroll(const SDL_MouseWheelEvent& e);
 		virtual void onMouseMove(const SDL_MouseMotionEvent& e) override;
+
+		void setReltoTrue();
+		void setReltoFalse();
+
+		int save_x;
+		int save_y;
+
+		irrklang::ISoundEngine* soundPlayer;
 	};
 }

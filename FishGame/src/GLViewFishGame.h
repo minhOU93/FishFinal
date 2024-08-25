@@ -15,6 +15,7 @@
 #include "WOPxController.h"
 #include "CameraShop.h"
 #include "Cat.h"
+#include "irrKlang.h"
 
 namespace Aftr
 {
@@ -66,6 +67,29 @@ public:
    physx::PxController* controller;
    physx::PxControllerCollisionFlags collisionFlags;
    physx::PxControllerFilters yo;
+   
+   std::string reelSound = ManagerEnvironmentConfiguration::getLMM() + "sounds/REEL_IN2.ogg";
+   std::string reelSound2 = ManagerEnvironmentConfiguration::getLMM() + "sounds/REEL_OUT2.ogg";
+   std::string reelSound3 = ManagerEnvironmentConfiguration::getLMM() + "sounds/FISH_STRUGGLE.ogg";
+
+   std::string helloTalk = ManagerEnvironmentConfiguration::getLMM() + "sounds/TALK.ogg";
+   std::string walkingSound = ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING.ogg";
+   std::string bgm = ManagerEnvironmentConfiguration::getLMM() + "sounds/Gloscien.mp3";
+
+   std::string winSource = ManagerEnvironmentConfiguration::getLMM() + "sounds/WIN.ogg";
+
+   irrklang::ISoundEngine* soundEngine = irrklang::createIrrKlangDevice();
+   irrklang::ISoundSource* reelInSound = soundEngine->addSoundSourceFromFile(reelSound.c_str());
+   irrklang::ISoundSource* reelOutSound = soundEngine->addSoundSourceFromFile(reelSound2.c_str());
+   irrklang::ISoundSource* fishStruggleSound = soundEngine->addSoundSourceFromFile(reelSound3.c_str());
+
+   irrklang::ISoundSource* talkSound = soundEngine->addSoundSourceFromFile(helloTalk.c_str());
+   irrklang::ISoundSource* walkSound = soundEngine->addSoundSourceFromFile(walkingSound.c_str());
+
+   irrklang::ISoundSource* enoMusic = soundEngine->addSoundSourceFromFile(bgm.c_str());
+   irrklang::ISoundSource* winSound = soundEngine->addSoundSourceFromFile(winSource.c_str());
+
+   irrklang::ISound* playSong;
 
    Vector rayOutput;
    WO* hello;
@@ -74,6 +98,9 @@ public:
 
    AftrGeometricTerm occulude;
    Cat* cat;
+   WOPxStatic* chairModel;
+   WOPxStatic* boxModel;
+   GuiText* mainGui;
 
    WO* blocker = nullptr;
    WOPxController* firstTest = nullptr;
@@ -92,6 +119,8 @@ public:
    CameraFishing* fishtime;
    CameraFirstPerson* firstPerson;
    CameraShop* shop;
+
+   CameraShop* loadingCam;
 
    //////////////////////////////////////////////////
 
