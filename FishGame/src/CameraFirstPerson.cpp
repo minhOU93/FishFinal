@@ -3,12 +3,19 @@
 #include "Model.h"
 #include <limits>
 #include "SDL.h"
+#include <algorithm>
 
 #include <chrono>
 #include <thread>
 
 
 using namespace Aftr;
+
+bool CameraFirstPerson::compare_float(double x, double y, float epsilon) {
+    if (fabs(x - y) < epsilon)
+        return true; //they are same
+    return false; //they are not same
+}
 
 void CameraFirstPerson::despawnRod()
 {
@@ -30,6 +37,12 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
     this->rel_y = 0;
     this->catch_score = 0.0f;
     this->doneTerrain = false;
+    this->frequency = 1.8f;
+    this->stepCycle = 0.0f;
+    this->bobbing = 0;
+    this->stopCycle = 1.0 / 60.0;
+
+    this->hasPlayed = false;
 
     this->inventory["Blue Fish"] = 0;
     this->inventory["Long Fin"] = 0;
@@ -58,7 +71,16 @@ void CameraFirstPerson::trackRod()
 
     fishingRod->rotateAboutRelZ(96.2 * DEGtoRAD);
 
+    fishingRod->rotateAboutRelX(bobbing * 1.4 * DEGtoRAD);
+    fishingRod->rotateAboutRelY(bobbing * 1.4 * DEGtoRAD);
+    fishingRod->rotateAboutRelZ(bobbing * 1.4 * DEGtoRAD);
+
     fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * -0.41);
+
+    fishingRod->moveRelative(fishingRod->getModel()->getRelYDir() * bobbing * 0.01);
+    fishingRod->moveRelative(fishingRod->getModel()->getRelZDir() * bobbing * 0.01);
+    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * bobbing * 0.03);
+
 } 
 
 
@@ -94,15 +116,31 @@ void CameraFirstPerson::update()
         Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
         Vector dis(noZ * this->cameraVelocity * this->wheelButtonVelocityScalar);
         
-        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
-        playWalking->setIsPaused(false);
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1.0 / 60, collisionFilters);
+
+        stepCycle += 1.0 / 60.0;
+        bobbing = sin(2.0f * PI * stepCycle * frequency) * AMPLITUDE;
+        if (bobbing > 0.2f && hasPlayed) hasPlayed = false;
+        if (compare_float(-AMPLITUDE, bobbing, 2E-3) && !hasPlayed)
+        {
+            std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING2.ogg");
+            soundPlayer->play2D(walkingSound.c_str());
+            hasPlayed = true;
+        }
     }
     else if (keystates[SDL_SCANCODE_A])
     {
         Vector dis(this->getModel()->getRelYDir() * this->cameraVelocity * this->wheelButtonVelocityScalar);
 
-        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
-        playWalking->setIsPaused(false);
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1.0 / 60.0, collisionFilters);
+
+        stepCycle += 1.0 / 60.0;
+        bobbing = sin(2.0f * PI * stepCycle * frequency) * AMPLITUDE;
+        if (compare_float(-AMPLITUDE, bobbing, 2E-3))
+        {
+            std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING2.ogg");
+            soundPlayer->play2D(walkingSound.c_str());
+        }
 
     }
     else if (keystates[SDL_SCANCODE_S])
@@ -110,31 +148,52 @@ void CameraFirstPerson::update()
         Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
         Vector dis(noZ * -1.0f * this->cameraVelocity * this->wheelButtonVelocityScalar);
 
-        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
-        playWalking->setIsPaused(false);
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1.0 / 60.0, collisionFilters);
 
+        stepCycle += 1.0 / 60.0;
+        bobbing = sin(2.0f * PI * stepCycle * frequency) * AMPLITUDE;
+        if (compare_float(-AMPLITUDE, bobbing, 2E-3))
+        {
+            std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING2.ogg");
+            soundPlayer->play2D(walkingSound.c_str());
+        }
     }
     else if (keystates[SDL_SCANCODE_D])
     {
         Vector dis(this->getModel()->getRelYDir() * this->cameraVelocity * -1.0f * this->wheelButtonVelocityScalar);
-        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1 / 60, collisionFilters);
-        playWalking->setIsPaused(false);
+        collisionFlags = actor->controller->move(PxVec3(dis.x, dis.y, dis.z), 1E-4, 1.0 / 60.0, collisionFilters);
 
+        stepCycle += 1.0 / 60.0;
+        bobbing = sin(2.0f * PI * stepCycle * frequency) * AMPLITUDE;
+        if (compare_float(-AMPLITUDE, bobbing, 2E-3))
+        {
+            std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING2.ogg");
+            soundPlayer->play2D(walkingSound.c_str());
+        }
     }
     else
     {
-        playWalking->setIsPaused(true);
-        playWalking->setPlayPosition(0);
-    }
 
+        if (!compare_float(bobbing, 0.0f, 1E-4))
+        {
+            bobbing = std::lerp(bobbing, 0.0f, stopCycle);
+            stopCycle += 1.0 / 60.0;
+        }
+        else
+        {
+            stepCycle = 0.0f;
+            stopCycle = 0.0f;
+            bobbing = 0;
+        }
+    }
 
     if (actor->controller != nullptr && collisionFlags != PxControllerCollisionFlag::eCOLLISION_DOWN)
     {
-        collisionFlags = actor->controller->move(PxVec3(0, 0, -0.85), 1E-4, 1 / 60, collisionFilters);
+        collisionFlags = actor->controller->move(PxVec3(0, 0, -0.85), 1E-4, 1.0 / 60.0, collisionFilters);
     }
 
 
-    if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z);
+    if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z + bobbing);
 
     if(fishingRod != nullptr) trackRod();
 

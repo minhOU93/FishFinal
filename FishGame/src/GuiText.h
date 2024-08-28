@@ -268,6 +268,18 @@ public:
 				showDialog = true;
 			}
 		}
+		if (ImGui::IsItemHovered())
+		{
+			if (!hoveredButtons[0])
+			{
+				playHover = true;
+				hoveredButtons[0] = true;
+			}
+		}
+		else
+		{
+			hoveredButtons[0] = false;
+		}
 		ImGui::SameLine();
         ImGui::Text(("$" + std::to_string(player->fishData->at(1)->price)).c_str());
 		ImGui::Separator();
@@ -292,6 +304,18 @@ public:
 
 				showDialog = true;
 			}
+		}
+		if (ImGui::IsItemHovered())
+		{
+			if (!hoveredButtons[1])
+			{
+				playHover = true;
+				hoveredButtons[1] = true;
+			}
+		}
+		else
+		{
+			hoveredButtons[1] = false;
 		}
 		ImGui::SameLine();
 		ImGui::Text(("$" + std::to_string(player->fishData->at(2)->price)).c_str());
@@ -318,6 +342,18 @@ public:
 				showDialog = true;
 			}
 		}
+		if (ImGui::IsItemHovered())
+		{
+			if (!hoveredButtons[2])
+			{
+				playHover = true;
+				hoveredButtons[2] = true;
+			}
+		}
+		else
+		{
+			hoveredButtons[2] = false;
+		}
 		ImGui::SameLine();
 		ImGui::Text(("$" + std::to_string(player->fishData->at(3)->price)).c_str());
 		ImGui::Separator();
@@ -343,9 +379,27 @@ public:
 				showDialog = true;
 			}
 		}
+		if (ImGui::IsItemHovered())
+		{
+			if (!hoveredButtons[3])
+			{
+				playHover = true;
+				hoveredButtons[3] = true;
+			}
+		}
+		else
+		{
+			hoveredButtons[3] = false;
+		}
 		ImGui::SameLine();
 		ImGui::Text(("$" + std::to_string(player->fishData->at(0)->price)).c_str());
 		ImGui::EndChild();
+		if (playHover)
+		{
+			std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/ITEM_HOVER.ogg");
+			soundPlayer->play2D(shopSound.c_str());
+			playHover = false;
+		}
 		ImGui::End();
 	}
 
@@ -512,6 +566,7 @@ public:
 	bool showShopText;
 
 	bool showInventory;
+	bool playHover;
 
 	std::string victoryText;
 	std::string dialog;
@@ -523,12 +578,15 @@ public:
 
 	irrklang::ISound* playTalk;
 	irrklang::ISound* playWinSound;
+	irrklang::ISoundEngine* soundPlayer;
 
 protected:
 	GuiText(WOGUI* parentWOGUI) : WOImGuiAbstract::WOImGuiAbstract(parentWOGUI), Aftr::IFace(this)
 	{
 
 		//glewInit();
+
+		playHover = false;
 
 		x = new int;
 		y = new int;
@@ -546,6 +604,12 @@ protected:
 		realSpeed = 1;
 
 		resetDialog = false;
+
+		hoveredButtons.resize(4);
+		for (int i = 0; i < hoveredButtons.size(); i++)
+		{
+			hoveredButtons[i] = false;
+		}
 
 		std::string bait(ManagerEnvironmentConfiguration::getLMM() + "images/carp.png");
 		std::string blueFish(ManagerEnvironmentConfiguration::getLMM() + "images/blue_fish.png");
@@ -606,6 +670,7 @@ protected:
 	std::string answer;
 	int realSpeed;
 	int puncChecker;
+	std::vector<bool> hoveredButtons;
 
 	GuiText* yo = nullptr;
 

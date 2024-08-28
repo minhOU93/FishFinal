@@ -126,7 +126,7 @@ void GLViewFishGame::updateWorld()
 
        std::string bgm(ManagerEnvironmentConfiguration::getLMM() + "sounds/Gloscien.mp3");
        irrklang::ISoundSource* enoMusic = soundEngine->addSoundSourceFromFile(bgm.c_str());
-       enoMusic->setDefaultVolume(0.115f);
+       enoMusic->setDefaultVolume(0.09f);
        
        soundEngine->play2D(enoMusic, true);
    }
@@ -312,12 +312,14 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            shop->setReltoFalse();
            this->cam = shop;
 
-
            //this->cam->setPosition(camPos);
            this->cam->setCameraNormalDirection(Vector(0, 0, 1.0f));
            Vector look(-0.991407, -0.121337, 0.049104);
            this->cam->setCameraLookDirection(look);
            this->cam->startCameraBehavior();
+           std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/OPEN_SHOP.ogg");
+           soundEngine->play2D(shopSound.c_str());
+
        }
 
    }
@@ -357,6 +359,9 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            mainGui->catDialog->mouthOpen = true;
            mainGui->catDialog->moveMouth();
 
+           std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/CLOSE_SHOP.ogg");
+           soundEngine->play2D(shopSound.c_str());
+
            Vector camLookDir = this->cam->getLookDirection();
            Vector camNormalDir = this->cam->getNormalDirection();
            Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z + 0.1f);
@@ -377,25 +382,9 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
    }
    //if (key.keysym.sym == SDLK_f)
    //{
-   //    mainGui->showFish = false;
-   //    Vector camLookDir = this->cam->getLookDirection();
-   //    Vector camNormalDir = this->cam->getNormalDirection();
-   //    Vector camPos = this->cam->getPosition();
-   //    HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+   //    std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING2.flac");
 
-   //    this->cam = fishtime;
-   //    this->cam->setMouseHandler(camMouseHandler);
-
-   //    this->cam->setPosition(camPos);
-   //    this->cam->setCameraNormalDirection(camNormalDir);
-   //    this->cam->setCameraLookDirection(camLookDir);
-   //    this->cam->startCameraBehavior();
-
-   //    cam->rotateToIdentity();
-   //    cam->setCameraLookDirection(Vector(0.6271, 0.692003, -0.263519));
-   //    cam->setPosition(Vector(1707.334229, 1710.420288, -63.118397));
-
-   //    fishtime->setBeginGame(true);
+   //    soundEngine->play2D(walkingSound.c_str());
    //}
 
 
@@ -456,14 +445,7 @@ void Aftr::GLViewFishGame::loadMap()
 
    std::string shinyRedPlasticCube( ManagerEnvironmentConfiguration::getSMM() + "/models/cube4x4x4redShinyPlastic_pp.wrl" );
 
-   std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/pole.fbx");
-   std::string bait(ManagerEnvironmentConfiguration::getLMM() + "models/bait.fbx");
-   std::string reel (ManagerEnvironmentConfiguration::getLMM() + "models/reel.fbx");
-   std::string line(ManagerEnvironmentConfiguration::getLMM() + "models/line.fbx");
-   std::string line2(ManagerEnvironmentConfiguration::getLMM() + "models/line2.fbx");
-
-   std::string hand(ManagerEnvironmentConfiguration::getLMM() + "models/hand.obj");
-
+   std::string pole(ManagerEnvironmentConfiguration::getLMM() + "models/poleG.obj");
    std::string skin(ManagerEnvironmentConfiguration::getLMM() + "models/uv_map.png");
 
    std::string hole(ManagerEnvironmentConfiguration::getLMM() + "models/hole2/hole.obj");
@@ -486,7 +468,7 @@ void Aftr::GLViewFishGame::loadMap()
 
    {
        //pole
-       WO* wo = WO::New(pole, Vector(0.01, 0.01, 0.01));
+       WO* wo = WO::New(pole, Vector(1, 1, 1));
        wo->upon_async_model_loaded([wo, skin, this]()
            {
                ModelMeshSkin spidey(ManagerTex::loadTexAsync(skin).value());
@@ -808,7 +790,6 @@ void Aftr::GLViewFishGame::loadMap()
        std::string reelSound3(ManagerEnvironmentConfiguration::getLMM() + "sounds/FISH_STRUGGLE2.ogg");
 
        std::string helloTalk(ManagerEnvironmentConfiguration::getLMM() + "sounds/TALK.ogg");
-       std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING.ogg");
 
        std::string winSource(ManagerEnvironmentConfiguration::getLMM() + "sounds/WIN.ogg");
 
@@ -817,7 +798,6 @@ void Aftr::GLViewFishGame::loadMap()
        irrklang::ISoundSource* fishStruggleSound = soundEngine->addSoundSourceFromFile(reelSound3.c_str());
 
        irrklang::ISoundSource* talkSound = soundEngine->addSoundSourceFromFile(helloTalk.c_str());
-       irrklang::ISoundSource* walkSound = soundEngine->addSoundSourceFromFile(walkingSound.c_str());
 
        irrklang::ISoundSource* winSound = soundEngine->addSoundSourceFromFile(winSource.c_str());
 
@@ -827,14 +807,14 @@ void Aftr::GLViewFishGame::loadMap()
 
        mainGui->playTalk = soundEngine->play2D(talkSound, true, true);
        mainGui->playWinSound = soundEngine->play2D(winSound, true, true);
-       firstPerson->playWalking = soundEngine->play2D(walkSound, true, true);
 
        fishtime->playReelIn->setVolume(0.11f);
        fishtime->playReelOut->setVolume(0.11f);
        fishtime->playFishStruggle->setVolume(0.12f);
        mainGui->playTalk->setVolume(0.15f);
-       mainGui->playWinSound->setVolume(0.16f);
-       firstPerson->playWalking->setVolume(0.19f);
+       mainGui->playWinSound->setVolume(0.13f);
+       firstPerson->soundPlayer = soundEngine;
+       mainGui->soundPlayer = soundEngine;
    }
 }
 

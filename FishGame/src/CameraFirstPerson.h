@@ -39,6 +39,8 @@ namespace Aftr
 		void despawnRod();
 		void spawnRod();
 
+		bool compare_float(double x, double y, float epsilon = 0.01f);
+
 		std::map<std::string, int> inventory;
 
 		//WOPxObj* actor;
@@ -48,10 +50,11 @@ namespace Aftr
 		physx::PxControllerCollisionFlags collisionFlags;
 		physx::PxControllerFilters collisionFilters;
 
+
 		bool doneTerrain;
 
 		std::vector<Fish*>* fishData;
-		irrklang::ISound* playWalking;
+		irrklang::ISoundEngine* soundPlayer;
 
 	protected:
 		float wheelButtonVelocityScalar;
@@ -61,6 +64,14 @@ namespace Aftr
 
 		int rel_x;
 		int rel_y;
+
+		long double bobbing;
+		long double stepCycle;
+		double stopCycle;
+		float frequency;
+		bool hasPlayed;
+
+		const long double AMPLITUDE = 0.5f;
 
 		float catch_score;
 

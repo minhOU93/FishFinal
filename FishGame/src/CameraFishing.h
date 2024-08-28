@@ -49,6 +49,7 @@ namespace Aftr
 		void spawnRod();
 		void resetGame();
 		bool normalizeCamera();
+		void rotateReel(int amount);
 
 		void reelIn();
 		void reelOut();

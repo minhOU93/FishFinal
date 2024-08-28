@@ -52,6 +52,16 @@ void CameraFishing::despawnRod()
     }
 }
 
+void CameraFishing::rotateReel(int amount)
+{
+    Mat4 savePose = fishingRod[1]->getPose();
+
+    fishingRod[1]->getModel()->rotateToIdentity();
+    fishingRod[1]->setPose(savePose);
+
+    fishingRod[1]->getModel()->rotateAboutRelX(amount * DEGtoRAD);
+}
+
 
 void CameraFishing::spawnRod()
 {
@@ -447,7 +457,7 @@ void CameraFishing::update()
     else if (reelOutStatus)
     {
         reelOut();
-        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+        rotateReel(-3);
     }
     else if (startWait && waitTime == std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count())
     {
@@ -464,7 +474,7 @@ void CameraFishing::update()
         pole_health -= 0.1f;
         playFishStruggle->setIsPaused(false);
         //gui->setHealth(float(pole_health / 100));
-        fishingRod[1]->getModel()->rotateAboutRelX(-10 * DEGtoRAD);
+        rotateReel(-10);
         if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
         {
             this->catch_goal = fishes[fishIndex]->difficulty;
@@ -484,7 +494,7 @@ void CameraFishing::update()
         {
             shakeCamera();
             playFishStruggle->setIsPaused(false);
-            fishingRod[1]->getModel()->rotateAboutRelX(-12 * DEGtoRAD);
+            rotateReel(-12);
         }
 
         if (start_time)
@@ -508,8 +518,7 @@ void CameraFishing::update()
 
         if (!fish_struggle && this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
         {
-
-            fishingRod[1]->getModel()->rotateAboutRelX(3 * DEGtoRAD);
+            rotateReel(3);
             if (catch_score >= catch_goal * 0.65)
             {
                 reelIn();
@@ -565,7 +574,7 @@ void CameraFishing::update()
 
         reelSpeed = 0.04;
         playReelOut->setIsPaused(false);
-        fishingRod[1]->getModel()->rotateAboutRelX(3 * DEGtoRAD);
+        rotateReel(3);
         reelIn();
     }
 
@@ -632,7 +641,9 @@ void CameraFishing::reelOut()
         fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
 
         fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
-        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+
+        rotateReel(-3);
+
         fishes[fishIndex]->moveRelative(Vector(0, 0, -reelSpeed));
     }
     else if (reelCheck <= 3.5)
@@ -641,7 +652,9 @@ void CameraFishing::reelOut()
         fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
 
         fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
-        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+
+        rotateReel(-3);
+
         fishes[fishIndex]->moveRelative(Vector(0, 0, -reelSpeed));
     }
     else if (reelCheck <= 5.5)
@@ -649,7 +662,9 @@ void CameraFishing::reelOut()
         fishingLines[3]->moveRelative(Vector(0, 0, -reelSpeed));
 
         fishingRod[2]->moveRelative(Vector(0, 0, -reelSpeed));
-        fishingRod[1]->getModel()->rotateAboutRelX(-3 * DEGtoRAD);
+
+        rotateReel(-3);
+
         fishes[fishIndex]->moveRelative(Vector(0, 0, -reelSpeed));
     }
     else
