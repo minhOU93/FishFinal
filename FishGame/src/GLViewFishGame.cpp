@@ -128,7 +128,8 @@ void GLViewFishGame::updateWorld()
        irrklang::ISoundSource* enoMusic = soundEngine->addSoundSourceFromFile(bgm.c_str());
        enoMusic->setDefaultVolume(0.09f);
        
-       soundEngine->play2D(enoMusic, true);
+       fishtime->bgmReference = soundEngine->play2D(enoMusic, true, false, true);
+
    }
 
    if (this->cam == fishtime)
@@ -346,7 +347,6 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
        {
            fishtime->returnVictory = true;
            fishtime->showVictory = false;
-           fishtime->resetGame();
        }
    }
    else if (cam == shop)
@@ -371,6 +371,7 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            this->cam = firstPerson;
            this->cam->setMouseHandler(camMouseHandler);
 
+
            //this->cam->setPosition(camPos);
            firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x + 7, camPos.y + 0.5, camPos.z));
 
@@ -380,12 +381,23 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            //firstPerson->setReltoTrue();
        }
    }
-   //if (key.keysym.sym == SDLK_f)
-   //{
-   //    std::string walkingSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/WALKING2.flac");
+   if (key.keysym.sym == SDLK_f)
+   {
+       Vector camLookDir = this->cam->getLookDirection();
+       Vector camNormalDir = this->cam->getNormalDirection();
+       Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z + 0.1f);
+       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
 
-   //    soundEngine->play2D(walkingSound.c_str());
-   //}
+       this->cam = firstPerson;
+       this->cam->setMouseHandler(camMouseHandler);
+
+       this->cam->setPosition(camPos);
+       firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x + 7, camPos.y + 0.5, camPos.z));
+
+       this->cam->setCameraNormalDirection(camNormalDir);
+       this->cam->setCameraLookDirection(camLookDir);
+       this->cam->startCameraBehavior();
+   }
 
 
 }
@@ -792,6 +804,7 @@ void Aftr::GLViewFishGame::loadMap()
        std::string helloTalk(ManagerEnvironmentConfiguration::getLMM() + "sounds/TALK.ogg");
 
        std::string winSource(ManagerEnvironmentConfiguration::getLMM() + "sounds/WIN.ogg");
+       std::string victorySource(ManagerEnvironmentConfiguration::getLMM() + "sounds/Confetti.mp3");
 
        irrklang::ISoundSource* reelInSound = soundEngine->addSoundSourceFromFile(reelSound.c_str());
        irrklang::ISoundSource* reelOutSound = soundEngine->addSoundSourceFromFile(reelSound2.c_str());
@@ -800,6 +813,8 @@ void Aftr::GLViewFishGame::loadMap()
        irrklang::ISoundSource* talkSound = soundEngine->addSoundSourceFromFile(helloTalk.c_str());
 
        irrklang::ISoundSource* winSound = soundEngine->addSoundSourceFromFile(winSource.c_str());
+
+       irrklang::ISoundSource* victorySong = soundEngine->addSoundSourceFromFile(victorySource.c_str());
 
        fishtime->playReelIn = soundEngine->play2D(reelInSound, true, true);
        fishtime->playReelOut = soundEngine->play2D(reelOutSound, true, true);
@@ -815,6 +830,9 @@ void Aftr::GLViewFishGame::loadMap()
        mainGui->playWinSound->setVolume(0.13f);
        firstPerson->soundPlayer = soundEngine;
        mainGui->soundPlayer = soundEngine;
+
+       fishtime->playVictory = soundEngine->play2D(victorySong, true, true);
+       fishtime->playVictory->setVolume(0.15f);
    }
 }
 

@@ -74,6 +74,9 @@ namespace Aftr
 		irrklang::ISound* playReelOut;
 		irrklang::ISound* playFishStruggle;
 
+		irrklang::ISound* bgmReference;
+		irrklang::ISound* playVictory;
+
 	protected:
 		float wheelButtonVelocityScalar;
 		int wheelScrollCounter;

@@ -71,15 +71,15 @@ void CameraFirstPerson::trackRod()
 
     fishingRod->rotateAboutRelZ(96.2 * DEGtoRAD);
 
-    fishingRod->rotateAboutRelX(bobbing * 1.4 * DEGtoRAD);
-    fishingRod->rotateAboutRelY(bobbing * 1.4 * DEGtoRAD);
-    fishingRod->rotateAboutRelZ(bobbing * 1.4 * DEGtoRAD);
+    fishingRod->rotateAboutRelX(bobbing * 1.13 * DEGtoRAD);
+    //fishingRod->rotateAboutRelY(bobbing * 1.0 * DEGtoRAD);
+    //fishingRod->rotateAboutRelZ(bobbing * 1.0 * DEGtoRAD);
 
     fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * -0.41);
 
     fishingRod->moveRelative(fishingRod->getModel()->getRelYDir() * bobbing * 0.01);
-    fishingRod->moveRelative(fishingRod->getModel()->getRelZDir() * bobbing * 0.01);
-    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * bobbing * 0.03);
+    fishingRod->moveRelative(fishingRod->getModel()->getRelZDir() * bobbing * 0.02);
+    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * bobbing * 0.02);
 
 } 
 

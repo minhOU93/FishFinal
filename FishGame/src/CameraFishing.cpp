@@ -401,13 +401,26 @@ void CameraFishing::victoryScreen()
 {
     if (angleVictory != 90)
     {
+        playVictory->setIsPaused(false);
+
         this->rotateAboutRelY(-3 * DEGtoRAD);
         angleVictory += 3;
         fishes[fishIndex]->isVisible = false;
         fishes[fishIndex]->rotateToIdentity();
+
+        if (bgmReference->getVolume() >= 0.0f)
+        {
+            bgmReference->setVolume(bgmReference->getVolume() - 0.003f);
+        }
+
+        if (playVictory->getVolume() < 0.15f)
+        {
+            bgmReference->setVolume(playVictory->getVolume() + 0.005f);
+        }
     }
     else
     {
+        bgmReference->setIsPaused(true);
         gui->showVictoryText = true;
         gui->victoryText = "You Caught a " + fishes[fishIndex]->name + "!";
         fishes[fishIndex]->isVisible = true;
@@ -423,19 +436,39 @@ void CameraFishing::returnFromVictory()
 {
     if (angleVictory != 0)
     {
+        bgmReference->setIsPaused(false);
         angleVictory -= 3;
         this->rotateAboutRelY(3 * DEGtoRAD);
+        if (playVictory->getVolume() > 0.0f)
+        {
+            playVictory->setVolume(playVictory->getVolume() - 0.005f);
+        }
+
+        if (bgmReference->getVolume() <= 0.09f)
+        {
+            bgmReference->setVolume(bgmReference->getVolume() + 0.003f);
+        }
     }
     else
     {
-        fishes[fishIndex]->isVisible = false;
         fishes[fishIndex]->setPose(saveFishPose);
+
+        playVictory->setIsPaused(true);
+        playVictory->setPlayPosition(0);
+        playVictory->setVolume(0.15f);
+        bgmReference->setVolume(0.09f);
+
+        fishes[fishIndex]->isVisible = false;
         returnVictory = false;
         begin = true;
         allowExit = true;
         gui->showVictoryText = false;
         gui->victoryText = "";
         gui->resetDialog = true;
+
+        resetGame();
+
+        this->begin = true;
     }
 }
 
@@ -621,9 +654,9 @@ void CameraFishing::reelIn()
     }
     else
     {
+        saveFishPose = fishes[fishIndex]->getPose();
         playReelOut->setIsPaused(true);
         endGame = false;
-        saveFishPose = fishes[fishIndex]->getPose();
         sleep_for(milliseconds(650));
         showVictory = true;
     }

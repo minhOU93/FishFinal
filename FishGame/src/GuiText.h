@@ -265,7 +265,15 @@ public:
 
 				dialog = catDialog->carpDialog[generateRandomNumber(0, catDialog->carpDialog.size() - 1)];
 
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/BUY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
+
 				showDialog = true;
+			}
+			else
+			{
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/DENY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -302,7 +310,15 @@ public:
 
 				dialog = catDialog->longDialog[generateRandomNumber(0, catDialog->longDialog.size() - 1)];
 
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/BUY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
+
 				showDialog = true;
+			}
+			else
+			{
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/DENY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -339,7 +355,15 @@ public:
 
 				dialog = catDialog->redDialog[generateRandomNumber(0, catDialog->redDialog.size() - 1)];
 
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/BUY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
+
 				showDialog = true;
+			}
+			else
+			{
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/DENY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
 			}
 		}
 		if (ImGui::IsItemHovered())
@@ -376,7 +400,15 @@ public:
 
 				dialog = catDialog->blueDialog[generateRandomNumber(0, catDialog->blueDialog.size() - 1)];
 
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/BUY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
+
 				showDialog = true;
+			}
+			else
+			{
+				std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/DENY_SOUND.ogg");
+				soundPlayer->play2D(shopSound.c_str());
 			}
 		}
 		if (ImGui::IsItemHovered())
