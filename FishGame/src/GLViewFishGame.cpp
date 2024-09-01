@@ -425,6 +425,11 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/OPEN_SHOP.ogg");
            soundEngine->play2D(shopSound.c_str());
 
+           if (cat->enterIndex >= cat->enterDialog.size()) cat->enterIndex = 0;
+           mainGui->dialog = cat->enterDialog[cat->enterIndex];
+           cat->enterIndex += 1;
+           mainGui->showDialog = true;
+
        }
 
    }

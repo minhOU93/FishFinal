@@ -57,10 +57,12 @@ public:
     }
 
     WO* frame;
+    int enterIndex;
 
     void initalizeDialogue()
     {
         mouthOpen = false;
+        enterIndex = 0;
         //redDialog.resize(3);
         //blueDialog.resize(3);
         //carpDialog.resize(3);
@@ -81,6 +83,12 @@ public:
         longDialog.push_back("A small fish, but every bite counts!Even the little ones have their charm.I'll take it off your hands, and who knows--might be the perfect snack for a picky customer!");
         longDialog.push_back("Well, it may be small, but it's got spirit!Not every day's a big catch, but I'll make the best of it.Here's your payment--every fish matters in my shop!");
         longDialog.push_back("A small fish today?No worries, they all have their place.I'll make sure this one finds a good use.Keep at it--you never know what tomorrow will bring!");
+
+        enterDialog.push_back("Ah, welcome, welcome!I smell fresh catch, did you bring me some lovely fish today?");
+        enterDialog.push_back("Greetings, brave fisherman!I've been waiting with eager whiskers for your catch.");
+        enterDialog.push_back("Show me your catch, and I'll show you the coin!");
+        enterDialog.push_back("Welcome!Did the ice give up any of its slippery secrets today?");
+        enterDialog.push_back("Hey bro!");
 
         std::string model2(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/cat_mouth_open.obj");
         std::string catSkin2(ManagerEnvironmentConfiguration::getLMM() + "models/Cat/skin.jpg");
@@ -104,6 +112,8 @@ public:
     std::vector<std::string> blueDialog;
     std::vector<std::string> carpDialog;
     std::vector<std::string> longDialog;
+
+    std::vector<std::string> enterDialog;
 
     bool mouthOpen;
 protected:

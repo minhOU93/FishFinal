@@ -112,10 +112,10 @@ void CameraFirstPerson::update()
         int yea2 = std::clamp(sway_y, -5, 5);
 
         float fr = std::clamp(yea * 0.05, -0.2, 0.3);
-        float fr2 = std::clamp(yea2 * 0.05, -0.3, 0.3);
+        float fr2 = std::clamp(yea2 * 0.05, -0.2, 0.3);
 
         sway = std::lerp(sway, initialSway + -(fr2 * 60), 1.0 / 40.0);
-        angleSway = std::lerp(angleSway, initialAngleSway + -(fr * 40), 1.0 / 60.0);
+        angleSway = std::lerp(angleSway, initialAngleSway + -(fr * 50), 1.0 / 60.0);
 
         stopSway = 0;
 
@@ -204,7 +204,7 @@ void CameraFirstPerson::update()
     }
 
 
-    if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z + bobbing);
+    if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z + (bobbing * 0.5));
     if(fishingRod != nullptr) trackRod();
 
 }

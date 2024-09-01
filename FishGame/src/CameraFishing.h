@@ -50,6 +50,7 @@ namespace Aftr
 		void resetGame();
 		bool normalizeCamera();
 		void rotateReel(int amount);
+		void fixReel();
 
 		void reelIn();
 		void reelOut();
@@ -64,6 +65,7 @@ namespace Aftr
 		bool returnVictory;
 		bool allowExit;
 		Mat4 saveFishPose;
+		Mat4 defualtReelPose;
 
 		CameraFirstPerson* player;
 		std::vector<Fish*> fishes;

@@ -39,6 +39,14 @@ int CameraFishing::generateRandomNumber(int min, int max) {
     return distr(gen);
 }
 
+void CameraFishing::fixReel()
+{
+    Mat4 savePose = fishingRod[1]->getPose();
+
+    fishingRod[1]->getModel()->rotateToIdentity();
+
+    fishingRod[1]->setPose(savePose);
+}
 void CameraFishing::despawnRod()
 {
     for (int i = 0; i < fishingLines.size(); i++)
@@ -54,11 +62,6 @@ void CameraFishing::despawnRod()
 
 void CameraFishing::rotateReel(int amount)
 {
-    Mat4 savePose = fishingRod[1]->getPose();
-    fishingRod[1]->getModel()->rotateToIdentity();
-    
-    fishingRod[1]->setPose(savePose);
-
     fishingRod[1]->getModel()->rotateAboutRelX(amount * DEGtoRAD);
 }
 
@@ -169,6 +172,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
             wo->rotateAboutRelX(25 * DEGtoRAD);
             ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
             fishingRod[1] = wo;
+            defualtReelPose = wo->getPose();
         }
 
         {
@@ -360,6 +364,7 @@ void CameraFishing::resetGame()
 
     Vector baitPosition(Vector(127.795, 133.145, 4.655) - old + displacement);
 
+    fishingRod[1]->setPose(defualtReelPose);
 
     for (int i = 0; i < fishingLines.size(); i++)
     {
@@ -391,6 +396,7 @@ void CameraFishing::resetGame()
     }
     pole_health = 100.0f;
     catch_score = 0;
+
 
     playFishStruggle->setIsPaused(true);
     playReelIn->setIsPaused(true);
@@ -517,7 +523,7 @@ void CameraFishing::update()
             fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
             gui->showProgress = true;
             allowExit = false;
-
+            fixReel();
             playFishStruggle->setIsPaused(true);
         }
     }
@@ -543,6 +549,7 @@ void CameraFishing::update()
 
         if (fish_struggle && std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count() == 2)
         {
+            fixReel();
             fish_struggle = false;
             start_time = true;
             fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
