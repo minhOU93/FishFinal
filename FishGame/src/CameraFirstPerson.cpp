@@ -41,6 +41,9 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
     this->stepCycle = 0.0f;
     this->bobbing = 0;
     this->stopCycle = 1.0 / 60.0;
+    stopSway = 0;
+    prev_sway_x = 0;
+    prev_sway_y = 0;
 
     this->hasPlayed = false;
 
@@ -52,6 +55,13 @@ CameraFirstPerson::CameraFirstPerson(GLView* glView, HandlerMouseState* mouseHan
     this->inventory["Money"] = 0;
 
     fishData = new std::vector<Fish*>;
+    sway = 0;
+    initialSway = 0;
+    posSway = -0.41;
+    initialPosSway = -0.41;
+
+    initialAngleSway = 96.2;
+    angleSway = 96.2;
 }
 
 CameraFirstPerson::~CameraFirstPerson()
@@ -60,22 +70,22 @@ CameraFirstPerson::~CameraFirstPerson()
 
 void CameraFirstPerson::trackRod()
 {
-    //ector yolo(this->getCameraLookAtPoint().x + 4, this->getCameraLookAtPoint().y, this->getCameraLookAtPoint().z);
     Vector inFront(this->getCameraLookAtPoint() + (this->getLookDirection() * 0.08));
     Mat4 hello;
 
     hello.setPosition(Vector(inFront.x, inFront.y, inFront.z));
+
     hello.setXYZ(this->getPose().getX(), this->getPose().getY(), this->getPose().getZ());
 
     fishingRod->setPose(hello);
 
-    fishingRod->rotateAboutRelZ(96.2 * DEGtoRAD);
+    fishingRod->rotateAboutRelZ(angleSway * DEGtoRAD);
+    fishingRod->rotateAboutRelX(-sway * DEGtoRAD);
+    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * initialPosSway);
 
     fishingRod->rotateAboutRelX(bobbing * 1.13 * DEGtoRAD);
     //fishingRod->rotateAboutRelY(bobbing * 1.0 * DEGtoRAD);
     //fishingRod->rotateAboutRelZ(bobbing * 1.0 * DEGtoRAD);
-
-    fishingRod->moveRelative(fishingRod->getModel()->getRelXDir() * -0.41);
 
     fishingRod->moveRelative(fishingRod->getModel()->getRelYDir() * bobbing * 0.01);
     fishingRod->moveRelative(fishingRod->getModel()->getRelZDir() * bobbing * 0.02);
@@ -86,30 +96,31 @@ void CameraFirstPerson::trackRod()
 
 void CameraFirstPerson::update()
 {
-    // CameraStandard::update();
+    if (prev_sway_x == sway_x && prev_sway_y == sway_y)
+    {
+        if(!compare_float(sway, initialSway)) sway = std::lerp(sway, initialSway, stopSway * 0.6);
+        if(!compare_float(angleSway, initialSway)) angleSway = std::lerp(angleSway, initialAngleSway, stopSway * 0.6);
 
-    //if (keystates[SDL_SCANCODE_W])
-    //{
-    //    Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
-    //    this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * this->wheelButtonVelocityScalar));
-    //}
-    //else if (keystates[SDL_SCANCODE_A])
-    //{
-    //    this->moveLeft();
+        stopSway += 1.0 / 60.0f;
+    }
+    else
+    {
+        prev_sway_x = sway_x;
+        prev_sway_y = sway_y;
 
-    //}
-    //else if (keystates[SDL_SCANCODE_S])
-    //{
-    //    Vector noZ(this->getModel()->getRelXDir().x, this->getModel()->getRelXDir().y, 0);
-    //    this->setPosition(this->getPosition() + (noZ * this->cameraVelocity * -1.0 * this->wheelButtonVelocityScalar));
+        int yea = std::clamp(sway_x, -5, 5);
+        int yea2 = std::clamp(sway_y, -5, 5);
 
-    //}
-    //else if (keystates[SDL_SCANCODE_D])
-    //{
-    //    this->moveRight();
-    //}
+        float fr = std::clamp(yea * 0.05, -0.2, 0.3);
+        float fr2 = std::clamp(yea2 * 0.05, -0.3, 0.3);
 
-    //if(fishingRod != nullptr) trackRod();
+        sway = std::lerp(sway, initialSway + -(fr2 * 60), 1.0 / 40.0);
+        angleSway = std::lerp(angleSway, initialAngleSway + -(fr * 40), 1.0 / 60.0);
+
+        stopSway = 0;
+
+    }
+
 
     if (keystates[SDL_SCANCODE_W])
     {
@@ -194,7 +205,6 @@ void CameraFirstPerson::update()
 
 
     if(actor->controller != nullptr) this->setPosition(actor->controller->getActor()->getGlobalPose().p.x, actor->controller->getActor()->getGlobalPose().p.y, actor->controller->getActor()->getGlobalPose().p.z + bobbing);
-
     if(fishingRod != nullptr) trackRod();
 
 }
@@ -202,15 +212,9 @@ void CameraFirstPerson::update()
 void CameraFirstPerson::onMouseDown(const SDL_MouseButtonEvent& e)
 {
     ////CameraStandard::onMouseDown(e);
-    //if (this->mouseHandler != NULL && this->mouseHandler->isMouseDownLeftButton())
-    //{
-    //    std::cout << "GO GO GO!!!";
 
-    //    catch_score += 0.01f;
 
-    //    std::cout << catch_score << std::endl;
-    //}
-
+    //std::cout << event2.motion.xrel << " " << event2.motion.yrel << std::endl;
 }
 
 void Aftr::CameraFirstPerson::onMouseWheelScroll(const SDL_MouseWheelEvent& e)
@@ -293,11 +297,16 @@ void CameraFirstPerson::onMouseUp(const SDL_MouseButtonEvent& e)
 //}
 
 void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
-{
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+{ 
 
     // Update the current position
     SDL_GetRelativeMouseState(&rel_x, &rel_y);
+
+    sway_x = e.xrel;
+    sway_y = e.yrel;
+
+
+    //std::cout << rel_x << " " << rel_y << std::endl;
 
     // Checks to see if the camera is looking straight up or down (1 = up, -1 = down)
     float angle = this->getLookDirection().dotProduct(Vector(0, 0, 1));
@@ -311,8 +320,6 @@ void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
     {
         rel_y = 0;
     }
-
-    //if (fishingRod != nullptr) trackRod();
 
     this->changeLookAtViaMouse(rel_x * 0.5, rel_y * 0.5);
 

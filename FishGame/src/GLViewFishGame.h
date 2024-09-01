@@ -45,7 +45,9 @@ public:
    virtual void onMouseMove( const SDL_MouseMotionEvent& e );
    virtual void onKeyDown( const SDL_KeyboardEvent& key );
    virtual void onKeyUp( const SDL_KeyboardEvent& key );
-   void createFishingRod();
+
+   //virtual int handleEvent(const SDL_Event& sdlEvent);
+
    const Uint8* keystates = SDL_GetKeyboardState(NULL);
     
    //WOPxLink* test = nullptr;
@@ -77,7 +79,7 @@ public:
    WOPxController* firstTest = nullptr;
 
    int invX, invY;
-
+   callback_func_on_SDL_Event getMouseEvent;
    float pos = 40.0f;
 
    //physx::PxFixedJoint* joint = nullptr;

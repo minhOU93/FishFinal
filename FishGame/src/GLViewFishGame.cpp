@@ -51,9 +51,109 @@ GLViewFishGame* GLViewFishGame::New( const std::vector< std::string >& args )
    glv->onCreate();
    return glv;
 }
-
-
-
+//
+//int GLViewFishGame::handleEvent(const SDL_Event& sdlEvent)
+//{
+//    //GLView::handleEvent(sdlEvent);
+//
+//    switch (sdlEvent.type)
+//    {
+//    case SDL_KEYDOWN:
+//        if (sdlEvent.key.keysym.sym == SDLK_ESCAPE)
+//            return 0; //exit module
+//        else
+//            this->onKeyDown(sdlEvent.key); //send the key to be processed by GLView's Event Handlers
+//        break;
+//
+//    case SDL_KEYUP:
+//        this->onKeyUp(sdlEvent.key);
+//        break;
+//
+//    case SDL_MOUSEMOTION:
+//    {
+//        //firstPerson->sway_x = sdlEvent.motion.xrel;
+//        //firstPerson->sway_y = sdlEvent.motion.yrel;
+//        this->onMouseMove(sdlEvent.motion);
+//        break;
+//    }
+//    case SDL_MOUSEBUTTONDOWN:
+//        std::cout << "SDL_MOUSEBUTTONDOWN...\n";
+//        this->onMouseDown(sdlEvent.button);
+//        break;
+//
+//    case SDL_MOUSEBUTTONUP:
+//        std::cout << "SDL_MOUSEBUTTONUP...\n";
+//        this->onMouseUp(sdlEvent.button);
+//        break;
+//
+//    case SDL_MOUSEWHEEL:
+//        this->onMouseWheelScroll(sdlEvent.wheel);
+//        break;
+//
+//    case SDL_JOYAXISMOTION:
+//        this->onJoyAxisMotion(sdlEvent.jaxis);
+//        break;
+//
+//    case SDL_JOYBALLMOTION:
+//        this->onJoyBallMotion(sdlEvent.jball);
+//        break;
+//
+//    case SDL_JOYHATMOTION:
+//        this->onJoyHatMotion(sdlEvent.jhat);
+//        break;
+//
+//    case SDL_JOYBUTTONDOWN:
+//        this->onJoyButtonDown(sdlEvent.jbutton);
+//        break;
+//
+//    case SDL_JOYBUTTONUP:
+//        this->onJoyButtonUp(sdlEvent.jbutton);
+//        break;
+//
+//    case SDL_JOYDEVICEADDED:
+//        this->onJoyDeviceAdded(sdlEvent.jdevice);
+//        break;
+//
+//    case SDL_JOYDEVICEREMOVED:
+//        this->onJoyDeviceRemoved(sdlEvent.jdevice);
+//        break;
+//
+//    case SDL_QUIT:
+//        std::cout << "SDL_QUIT event received...\n";
+//        return 0; //exit module
+//        break;
+//
+//    case USRRESET:
+//        return -1; //reset module
+//        break;
+//
+//    case SDL_WINDOWEVENT:
+//        return this->handleWindowEvent(sdlEvent.window);
+//        break;
+//
+//    case SDL_SYSWMEVENT:
+//        return this->handleSystemSpecificEventOSDependent(sdlEvent.syswm);
+//
+//    case SDL_TEXTEDITING: //sdl type 770 0x302
+//        break;
+//
+//    case SDL_TEXTINPUT: //sdl type 771 0x303
+//        break;
+//
+//    case SDL_CLIPBOARDUPDATE:
+//        std::cout << "SDL Clipboard Updated...\n";
+//        break;
+//
+//    default:
+//#ifndef AFTR_CONFIG_USE_IPHONE
+//        std::cout << "GLView::handleEvent(): Unknown SDL_Event sdlEvent.type='" << (int)sdlEvent.type << " (0x" << std::hex << (int)sdlEvent.type << std::dec << ")\n";
+//#endif
+//    }
+//
+//    return 1;
+//
+//    //return 1;
+//}
 
 GLViewFishGame::GLViewFishGame( const std::vector< std::string >& args ) : GLView( args )
 {
@@ -70,6 +170,7 @@ GLViewFishGame::GLViewFishGame( const std::vector< std::string >& args ) : GLVie
    //    calls GLView::onCreate()
 
    //GLViewFishGame::onCreate() is invoked after this module's LoadMap() is completed.
+
 }
 
 
@@ -158,6 +259,7 @@ void GLViewFishGame::updateWorld()
    }
    else if (this->cam == firstPerson)
    {
+
        fishtime->despawnRod();
        firstPerson->spawnRod();
 
@@ -186,6 +288,7 @@ void GLViewFishGame::updateWorld()
            mainGui->showInventory = true;
            SDL_GetRelativeMouseState(&invX, &invY);
            SDL_WarpMouseInWindow(ManagerWindowing::getCurrentWindow(), invX, invY);
+
        }
        else
        {
@@ -253,6 +356,7 @@ void GLViewFishGame::onResizeWindow( GLsizei width, GLsizei height )
 void GLViewFishGame::onMouseDown( const SDL_MouseButtonEvent& e )
 {
    GLView::onMouseDown( e );
+
 }
 
 
@@ -381,25 +485,6 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
            //firstPerson->setReltoTrue();
        }
    }
-   if (key.keysym.sym == SDLK_f)
-   {
-       Vector camLookDir = this->cam->getLookDirection();
-       Vector camNormalDir = this->cam->getNormalDirection();
-       Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z + 0.1f);
-       HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
-
-       this->cam = firstPerson;
-       this->cam->setMouseHandler(camMouseHandler);
-
-       this->cam->setPosition(camPos);
-       firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x + 7, camPos.y + 0.5, camPos.z));
-
-       this->cam->setCameraNormalDirection(camNormalDir);
-       this->cam->setCameraLookDirection(camLookDir);
-       this->cam->startCameraBehavior();
-   }
-
-
 }
 
 
@@ -493,6 +578,19 @@ void Aftr::GLViewFishGame::loadMap()
        wo->setPosition(cam->getPosition());
        //wo->rotateAboutRelZ(45 * DEGtoRAD);
        worldLst->push_back(wo);
+
+       {
+
+           WO* wo = WO::New(pole, Vector(1, 1, 1));
+           wo->upon_async_model_loaded([wo, this]()
+               {
+                   firstPerson->ghostRod = wo;
+               });
+           wo->setPosition(cam->getPosition());
+           //wo->rotateAboutRelZ(45 * DEGtoRAD);
+           wo->isVisible = false;
+           worldLst->push_back(wo);
+       }
    }
 
    {
@@ -537,6 +635,7 @@ void Aftr::GLViewFishGame::loadMap()
        chairModel->setPosition(displacement);
 
        worldLst->push_back(chairModel);
+       
    }
     
    {

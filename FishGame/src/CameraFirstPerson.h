@@ -32,8 +32,6 @@ namespace Aftr
 		virtual void moveRight(); ///< Pans camera to the 'right' (along camera's local -y axis)
 		virtual void setCameraVelocityMultiplier(float camVelMultiplier); ///< Multiplier must be greater than zero
 
-		void changeLookForObj(int deltaX, int deltaY);
-
 		void trackRod();
 		void setRod(WO* rod) { fishingRod = rod; }
 		void despawnRod();
@@ -45,29 +43,49 @@ namespace Aftr
 
 		//WOPxObj* actor;
 		WO* actorMover;
+		WO* ghostRod;
 
 		WOPxController* actor;
 		physx::PxControllerCollisionFlags collisionFlags;
 		physx::PxControllerFilters collisionFilters;
-
 
 		bool doneTerrain;
 
 		std::vector<Fish*>* fishData;
 		irrklang::ISoundEngine* soundPlayer;
 
+		int sway_x;
+		int sway_y;
+
+		bool isSway;
+
 	protected:
 		float wheelButtonVelocityScalar;
 		int wheelScrollCounter;
+
+		int prev_sway_x;
+		int prev_sway_y;
 
 		const Uint8* keystates = SDL_GetKeyboardState(NULL);
 
 		int rel_x;
 		int rel_y;
 
+		float stopSway;
+
+		float initialAngleSway;
+		float angleSway;
+
+		float initialSway;
+		float sway;
+
+		float posSway;
+		float initialPosSway;
+
 		long double bobbing;
 		long double stepCycle;
 		double stopCycle;
+
 		float frequency;
 		bool hasPlayed;
 

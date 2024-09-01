@@ -55,8 +55,8 @@ void CameraFishing::despawnRod()
 void CameraFishing::rotateReel(int amount)
 {
     Mat4 savePose = fishingRod[1]->getPose();
-
     fishingRod[1]->getModel()->rotateToIdentity();
+    
     fishingRod[1]->setPose(savePose);
 
     fishingRod[1]->getModel()->rotateAboutRelX(amount * DEGtoRAD);
