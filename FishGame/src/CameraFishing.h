@@ -69,7 +69,7 @@ namespace Aftr
 
 		CameraFirstPerson* player;
 		std::vector<Fish*> fishes;
-
+		Vector reelScale;
 
 		//irrklang::ISoundSource* reelInSFX;
 		irrklang::ISound* playReelIn;

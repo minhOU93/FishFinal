@@ -305,8 +305,7 @@ void CameraFirstPerson::onMouseMove(const SDL_MouseMotionEvent& e)
     sway_x = e.xrel;
     sway_y = e.yrel;
 
-
-    //std::cout << rel_x << " " << rel_y << std::endl;
+    //std::cout << sway_x << " " << sway_y << std::endl;
 
     // Checks to see if the camera is looking straight up or down (1 = up, -1 = down)
     float angle = this->getLookDirection().dotProduct(Vector(0, 0, 1));

@@ -256,6 +256,12 @@ void GLViewFishGame::updateWorld()
            this->cam->setCameraLookDirection(camLookDir);
            this->cam->startCameraBehavior();
        }
+
+       if (fishtime->showVictory == true && this->mouseHandler.isMouseDownLeftButton())
+       {
+           fishtime->returnVictory = true;
+           fishtime->showVictory = false;
+       }
    }
    else if (this->cam == firstPerson)
    {
@@ -296,9 +302,39 @@ void GLViewFishGame::updateWorld()
        }
        
    }
-   else if (cam == shop)
+   else if (this->cam == shop)
    {
        firstPerson->despawnRod();
+
+       if (this->mouseHandler.isMouseDownLeftButton())
+       {
+           mainGui->showShop = false;
+           mainGui->resetDialog = true;
+           mainGui->showDialog = false;
+           mainGui->catDialog->mouthOpen = true;
+           mainGui->catDialog->moveMouth();
+
+           std::string shopSound(ManagerEnvironmentConfiguration::getLMM() + "sounds/CLOSE_SHOP.ogg");
+           soundEngine->play2D(shopSound.c_str());
+
+           Vector camLookDir = this->cam->getLookDirection();
+           Vector camNormalDir = this->cam->getNormalDirection();
+           Vector camPos = Vector(this->cam->getPosition().x, this->cam->getPosition().y, this->cam->getPosition().z + 0.1f);
+           HandlerMouseState* camMouseHandler = this->cam->getMouseHandler();
+
+           this->shop->setReltoTrue();
+           this->cam = firstPerson;
+           this->cam->setMouseHandler(camMouseHandler);
+
+
+           //this->cam->setPosition(camPos);
+           firstPerson->actor->controller->setPosition(PxExtendedVec3(camPos.x + 7, camPos.y + 0.5, camPos.z));
+
+           this->cam->setCameraNormalDirection(camNormalDir);
+           this->cam->setCameraLookDirection(camLookDir);
+           this->cam->startCameraBehavior();
+           //firstPerson->setReltoTrue();
+       }
    }
 
    //std::cout << cam->getPosition().distanceFrom(chairModel->getPosition()) << std::endl;
@@ -452,7 +488,7 @@ void GLViewFishGame::onKeyDown( const SDL_KeyboardEvent& key )
             this->cam->setCameraLookDirection(camLookDir);
             this->cam->startCameraBehavior();
        }
-       else if (fishtime->showVictory == true && key.keysym.sym == SDLK_f)
+       else if (fishtime->showVictory == true && (key.keysym.sym == SDLK_f))
        {
            fishtime->returnVictory = true;
            fishtime->showVictory = false;

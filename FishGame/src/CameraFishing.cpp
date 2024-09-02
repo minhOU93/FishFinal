@@ -41,12 +41,16 @@ int CameraFishing::generateRandomNumber(int min, int max) {
 
 void CameraFishing::fixReel()
 {
-    Mat4 savePose = fishingRod[1]->getPose();
+    Mat4 savePose; 
+
+    savePose.setXYZ(fishingRod[1]->getModel()->getPose().getX(), fishingRod[1]->getModel()->getPose().getY(), fishingRod[1]->getModel()->getPose().getZ());
+    savePose.setPosition(fishingRod[1]->getPosition());
 
     fishingRod[1]->getModel()->rotateToIdentity();
 
-    fishingRod[1]->setPose(savePose);
+    fishingRod[1]->getModel()->setPose(savePose);
 }
+
 void CameraFishing::despawnRod()
 {
     for (int i = 0; i < fishingLines.size(); i++)
@@ -173,6 +177,7 @@ CameraFishing::CameraFishing(GLView* glView, HandlerMouseState* mouseHandler) : 
             ManagerGLView::getGLView()->getWorldContainer()->push_back(wo);
             fishingRod[1] = wo;
             defualtReelPose = wo->getPose();
+            reelScale = wo->getModel()->getScale();
         }
 
         {
@@ -486,7 +491,7 @@ void CameraFishing::update()
         //this->setCameraLookDirection(Vector(0.646266f, 0.713154f, this->getLookDirection().z));
         fishes[fishIndex]->isVisible = false;
         waitTime = generateRandomNumber(3, 8);
-        fishIndex = generateRandomNumber(0, 3);
+        fishIndex = generateRandomNumber(0, fishes.size() - 1);
 
         reelOutStatus = true;
 
@@ -533,6 +538,8 @@ void CameraFishing::update()
         {
             shakeCamera();
             playFishStruggle->setIsPaused(false);
+            fixReel();
+
             rotateReel(-12);
         }
 
@@ -549,7 +556,6 @@ void CameraFishing::update()
 
         if (fish_struggle && std::chrono::duration_cast<std::chrono::seconds>(end_timer - start_timer).count() == 2)
         {
-            fixReel();
             fish_struggle = false;
             start_time = true;
             fishStruggleTime = generateRandomNumber(fishes[fishIndex]->struggleRange.first, fishes[fishIndex]->struggleRange.second);
@@ -712,6 +718,7 @@ void CameraFishing::reelOut()
         reelOutStatus = false;
         startWait = true;
         start_timer = std::chrono::high_resolution_clock::now();
+        fixReel();
 
         playReelOut->setIsPaused(true);
     }
